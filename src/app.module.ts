@@ -12,8 +12,10 @@ import { AuthModule } from './auth/auth.module';
 import { Verification } from './auth/entities/verification.entity';
 import { ACCESS_TOKEN } from './common/constants/constants';
 import { EmailModule } from './email/email.module';
+import { FirebaseModule } from './firebase/firebase.module';
 import { User } from './user/entities/user.entity';
 import { UserModule } from './user/user.module';
+import { UploadModule } from './upload/upload.module';
 
 @Module({
   imports: [
@@ -32,6 +34,11 @@ import { UserModule } from './user/user.module';
         VERIFY_TOKEN_SECRET: Joi.string().required(),
         ACCESS_TOKEN_SECRET: Joi.string().required(),
         ACCESS_TOKEN_EXPIRED_IN: Joi.string().required(),
+        FIREBASE_API_KEY: Joi.string().required(),
+        FIREBASE_AUTH_DOMAIN: Joi.string().required(),
+        FIREBASE_PROJECT_ID: Joi.string().required(),
+        FIREBASE_STORAGE_BUCKET: Joi.string().required(),
+        FIREBASE_APP_ID: Joi.string().required(),
       }),
     }),
     TypeOrmModule.forRoot({
@@ -59,9 +66,17 @@ import { UserModule } from './user/user.module';
       pass: process.env.EMAIL_PASSWORD,
       from: process.env.EMAIL_FROM,
     }),
+    FirebaseModule.forRoot({
+      apiKey: process.env.FIREBASE_API_KEY,
+      authDomain: process.env.FIREBASE_AUTH_DOMAIN,
+      projectId: process.env.FIREBASE_PROJECT_ID,
+      storageBucket: process.env.FIREBASE_STORAGE_BUCKET,
+      appId: process.env.FIREBASE_APP_ID,
+    }),
     UserModule,
     AuthModule,
     EmailModule,
+    UploadModule,
   ],
   controllers: [AppController],
   providers: [AppService],

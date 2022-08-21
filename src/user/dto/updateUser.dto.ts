@@ -7,6 +7,7 @@ export class UpdateUserInput extends PickType(User, [
   'address',
   'name',
   'phoneNumber',
+  'avatar',
 ]) {}
 
 @ObjectType()

@@ -6,8 +6,15 @@ import {
   registerEnumType,
 } from '@nestjs/graphql';
 import { compare, hash } from 'bcrypt';
-import { IsEmail, IsPhoneNumber, IsString } from 'class-validator';
+import {
+  IsEmail,
+  IsOptional,
+  IsPhoneNumber,
+  IsString,
+  ValidateNested,
+} from 'class-validator';
 import { CoreEntity } from 'src/common/entities/core.entity';
+import { StoredFile } from 'src/upload/Object/StoredFile';
 import { BeforeInsert, BeforeUpdate, Column, Entity } from 'typeorm';
 export enum UserRole {
   Normal = 'Normal',
@@ -53,7 +60,13 @@ export class User extends CoreEntity {
   @Field({ nullable: true })
   @Column({ nullable: true })
   @IsPhoneNumber('VN')
+  @IsOptional()
   phoneNumber?: string;
+
+  @Field(() => StoredFile, { nullable: true })
+  @Column('json', { nullable: true })
+  @ValidateNested()
+  avatar?: StoredFile;
 
   @BeforeInsert()
   @BeforeUpdate()

@@ -2,6 +2,11 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
+type StoredFile {
+  fileUrl: String!
+  filePath: String!
+}
+
 type User {
   id: ID!
   createdAt: DateTime!
@@ -13,6 +18,7 @@ type User {
   role: UserRole!
   address: String
   phoneNumber: String
+  avatar: StoredFile
 }
 
 """
@@ -80,6 +86,11 @@ type UpdateUserOutput {
   error: CustomError
 }
 
+input StoredFileInputType {
+  fileUrl: String!
+  filePath: String!
+}
+
 type Query {
   getDetailUser: GetDetailUserOutput!
   login(input: LoginInput!): LoginOutPut!
@@ -111,6 +122,7 @@ input UpdateUserInput {
   name: String!
   address: String
   phoneNumber: String
+  avatar: StoredFileInputType
 }
 
 input ChangePasswordInput {
