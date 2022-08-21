@@ -3,7 +3,7 @@ import { Field, ObjectType } from '@nestjs/graphql';
 @ObjectType()
 class CustomError {
   @Field()
-  field: string;
+  mainReason: string;
 
   @Field()
   message: string;

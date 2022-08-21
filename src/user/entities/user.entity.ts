@@ -1,15 +1,24 @@
-import { Field, InputType, ObjectType } from '@nestjs/graphql';
+import {
+  Field,
+  ID,
+  InputType,
+  ObjectType,
+  registerEnumType,
+} from '@nestjs/graphql';
+import { compare, hash } from 'bcrypt';
 import { IsEmail, IsPhoneNumber, IsString } from 'class-validator';
 import { CoreEntity } from 'src/common/entities/core.entity';
-import { Column, Entity } from 'typeorm';
-
+import { BeforeInsert, BeforeUpdate, Column, Entity } from 'typeorm';
 export enum UserRole {
   Normal = 'Normal',
   Admin = 'Admin',
 }
+registerEnumType(UserRole, {
+  name: 'UserRole',
+});
 
-@ObjectType()
 @InputType({ isAbstract: true })
+@ObjectType()
 @Entity()
 export class User extends CoreEntity {
   @Field()
@@ -43,6 +52,32 @@ export class User extends CoreEntity {
 
   @Field({ nullable: true })
   @Column({ nullable: true })
-  @IsPhoneNumber()
+  @IsPhoneNumber('VN')
   phoneNumber?: string;
+
+  @BeforeInsert()
+  @BeforeUpdate()
+  async hashPassword() {
+    if (!this.password) return;
+    console.log(this.password);
+    this.password = await hash(this.password, 12);
+  }
+
+  async checkPassword(password): Promise<Boolean> {
+    return await compare(password, this.password);
+  }
+}
+@ObjectType()
+export class SimpleUser {
+  @Field(() => ID)
+  id: number;
+
+  @Field()
+  email: string;
+
+  @Field()
+  name: string;
+
+  @Field(() => UserRole)
+  role: UserRole;
 }
