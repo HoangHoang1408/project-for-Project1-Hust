@@ -10,12 +10,18 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { Verification } from './auth/entities/verification.entity';
+import { BookingModule } from './booking/booking.module';
+import { Booking } from './booking/entities/booking.entity';
 import { ACCESS_TOKEN } from './common/constants/constants';
+import { DataModule } from './data/data.module';
 import { EmailModule } from './email/email.module';
 import { FirebaseModule } from './firebase/firebase.module';
+import { UploadModule } from './upload/upload.module';
 import { User } from './user/entities/user.entity';
 import { UserModule } from './user/user.module';
-import { UploadModule } from './upload/upload.module';
+import { Car } from './vehicle/entities/car.entity';
+import { MotorBike } from './vehicle/entities/motobike.entity';
+import { VehicleModule } from './vehicle/vehicle.module';
 
 @Module({
   imports: [
@@ -48,7 +54,7 @@ import { UploadModule } from './upload/upload.module';
       username: process.env.DATABASE_USERNAME,
       password: process.env.DATABASE_PASSWORD,
       database: process.env.DATABASE_NAME,
-      entities: [User, Verification],
+      entities: [User, Verification, Car, MotorBike, Booking],
       synchronize: true,
     }),
     GraphQLModule.forRoot<ApolloDriverConfig>({
@@ -77,6 +83,9 @@ import { UploadModule } from './upload/upload.module';
     AuthModule,
     EmailModule,
     UploadModule,
+    VehicleModule,
+    DataModule,
+    BookingModule,
   ],
   controllers: [AppController],
   providers: [AppService],

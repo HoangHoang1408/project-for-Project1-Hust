@@ -7,6 +7,142 @@ type StoredFile {
   filePath: String!
 }
 
+type VehicleStatus {
+  vehicleNumber: Float!
+  booked: Boolean!
+  goodCondition: Boolean!
+}
+
+type Procedure {
+  mortgateProperty: [String!]
+  mortgatePaper: [String!]
+  verificationPaper: [String!]
+}
+
+type Car {
+  id: ID!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  name: String!
+  rating: Float!
+  engineType: EngineType!
+  manufactureYear: Float!
+  price: Float!
+  maxDistance: Float
+  additionalDistancePrice: Float!
+  procedures: Procedure!
+  images: [StoredFile!]
+  totalQuantity: Float!
+  vehicleStatuses: [VehicleStatus!]!
+  acceptedPayment: [Payment!]!
+  carType: CarType!
+  carBrand: CarBrand!
+  transmissionType: TransmissionType!
+  consumption: Float!
+  features: [String!]!
+  bookings: [Booking!]
+}
+
+"""
+A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
+"""
+scalar DateTime
+
+enum EngineType {
+  GASOLINE
+  ELECTRIC
+}
+
+enum Payment {
+  BEFORE
+  AFTER
+  BANK_TRANSFER
+}
+
+enum CarType {
+  SEAT45
+  SEAT7
+  PICKUP_TRUCK
+  LUXURY_CAR
+}
+
+enum CarBrand {
+  VINFAST
+  TOYOTA
+  HUYNDAI
+  FORD
+  HONDA
+  NISSAN
+  SUZUKI
+  VOLVO
+}
+
+enum TransmissionType {
+  MANUAL_TRANSMISSION
+  AUTOMATIC_TRANSMISSION
+}
+
+type MotorBike {
+  id: ID!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  name: String!
+  rating: Float!
+  engineType: EngineType!
+  manufactureYear: Float!
+  price: Float!
+  maxDistance: Float
+  additionalDistancePrice: Float!
+  procedures: Procedure!
+  images: [StoredFile!]
+  totalQuantity: Float!
+  vehicleStatuses: [VehicleStatus!]!
+  acceptedPayment: [Payment!]!
+  bookings: [Booking!]
+  transmissionType: TransmissionType!
+  motorBikeBrand: MotorBikeBrand!
+}
+
+enum MotorBikeBrand {
+  VINFAST
+  HONDA
+  DUCATI
+  SYW
+  SUZUKI
+  YAMAHA
+}
+
+type Booking {
+  id: ID!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  bookingCode: String!
+  user: User
+  homeDelivery: String
+  startDate: DateTime!
+  endDate: DateTime!
+  totalPrice: Float!
+  note: String
+  payment: Payment!
+  status: BookingStatus!
+  rating: Float
+  feedBack: String
+  vehicleType: VehicleType!
+  car: Car
+  motorBike: MotorBike
+}
+
+enum BookingStatus {
+  PENDING
+  VEHICLE_TAKEN
+  FINISHED
+}
+
+enum VehicleType {
+  CAR
+  MOTOR_BIKE
+}
+
 type User {
   id: ID!
   createdAt: DateTime!
@@ -19,12 +155,8 @@ type User {
   address: String
   phoneNumber: String
   avatar: StoredFile
+  bookings: [Booking!]
 }
-
-"""
-A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
-"""
-scalar DateTime
 
 enum UserRole {
   Normal
@@ -41,6 +173,11 @@ type SimpleUser {
 type CustomError {
   mainReason: String!
   message: String!
+}
+
+type PaginationOutput {
+  totalPages: Int
+  totalResults: Int
 }
 
 type ForgotPasswordOutput {
@@ -70,6 +207,36 @@ type VerifyForgotPasswordOutput {
   error: CustomError
 }
 
+type CreateBookingOutput {
+  ok: Boolean!
+  error: CustomError
+  bookingCode: String
+}
+
+type UpdateBookingStatusOutput {
+  ok: Boolean!
+  error: CustomError
+}
+
+type GetBookingDetailOutput {
+  ok: Boolean!
+  error: CustomError
+  booking: Booking
+}
+
+type GetBookingsByOutput {
+  ok: Boolean!
+  error: CustomError
+  bookings: [Booking!]
+  pagination: PaginationOutput
+}
+
+type CheckVehicleAvailableOutput {
+  ok: Boolean!
+  error: CustomError
+  available: Boolean
+}
+
 type ChangePasswordOutput {
   ok: Boolean!
   error: CustomError
@@ -86,9 +253,77 @@ type UpdateUserOutput {
   error: CustomError
 }
 
+type CreateCarOutput {
+  ok: Boolean!
+  error: CustomError
+}
+
+type GetCarDetailOutput {
+  ok: Boolean!
+  error: CustomError
+  car: Car
+}
+
+type GetCarsByOutput {
+  ok: Boolean!
+  error: CustomError
+  cars: [Car!]
+  pagination: PaginationOutput
+}
+
+type UpdateCarOutput {
+  ok: Boolean!
+  error: CustomError
+}
+
+type DeleteCarOutput {
+  ok: Boolean!
+  error: CustomError
+}
+
+type CreateMotorBikeOutput {
+  ok: Boolean!
+  error: CustomError
+}
+
+type GetMotorBikeDetailOutput {
+  ok: Boolean!
+  error: CustomError
+  motorBike: MotorBike
+}
+
+type GetMotorBikesByOutput {
+  ok: Boolean!
+  error: CustomError
+  motorBikes: [MotorBike!]
+  pagination: PaginationOutput
+}
+
+type UpdateMotorBikeOutput {
+  ok: Boolean!
+  error: CustomError
+}
+
+type DeleteMotorBikeOutput {
+  ok: Boolean!
+  error: CustomError
+}
+
 input StoredFileInputType {
   fileUrl: String!
   filePath: String!
+}
+
+input VehicleStatusInputType {
+  vehicleNumber: Float!
+  booked: Boolean!
+  goodCondition: Boolean!
+}
+
+input ProcedureInputType {
+  mortgateProperty: [String!]
+  mortgatePaper: [String!]
+  verificationPaper: [String!]
 }
 
 type Query {
@@ -96,6 +331,13 @@ type Query {
   login(input: LoginInput!): LoginOutPut!
   verifyEmail(input: VerifyEmailInput!): VerifyEmailOutput!
   forgotPassword(input: ForgotPasswordInput!): ForgotPasswordOutput!
+  getCarDetail(input: GetCarDetailInput!): GetCarDetailOutput!
+  getCarsBy(input: GetCarsByInput!): GetCarsByOutput!
+  getMotorBikeDetail(input: GetMotorBikeDetailInput!): GetMotorBikeDetailOutput!
+  getMotorBikesBy(input: GetMotorBikesByInput!): GetMotorBikesByOutput!
+  checkVehicleAvailable(input: CheckVehicleAvailableInput!): CheckVehicleAvailableOutput!
+  getBookingDetail(input: GetBookingDetailInput!): GetBookingDetailOutput!
+  getBookingsBy(input: GetBookingsByInput!): GetBookingsByOutput!
 }
 
 input LoginInput {
@@ -111,11 +353,67 @@ input ForgotPasswordInput {
   email: String!
 }
 
+input GetCarDetailInput {
+  carId: ID!
+}
+
+input GetCarsByInput {
+  engineType: EngineType
+  carType: CarType
+  carBrand: CarBrand
+  transmissionType: TransmissionType
+  startDate: DateTime
+  endDate: DateTime
+  pagination: PaginationInput!
+}
+
+input PaginationInput {
+  page: Int = 1
+  resultsPerPage: Int = 10
+}
+
+input GetMotorBikeDetailInput {
+  motorBikeId: ID!
+}
+
+input GetMotorBikesByInput {
+  engineType: EngineType
+  startDate: DateTime
+  endDate: DateTime
+  pagination: PaginationInput!
+}
+
+input CheckVehicleAvailableInput {
+  startDate: DateTime!
+  endDate: DateTime!
+  vehicleType: VehicleType!
+  vehicleId: ID!
+}
+
+input GetBookingDetailInput {
+  bookingId: ID!
+}
+
+input GetBookingsByInput {
+  startDate: DateTime
+  endDate: DateTime
+  vehicleType: VehicleType!
+  pagination: PaginationInput
+}
+
 type Mutation {
   updateUser(input: UpdateUserInput!): UpdateUserOutput!
   changePassword(input: ChangePasswordInput!): ChangePasswordOutput!
   signup(input: SignUpInput!): SignUpOutPut!
   verifyForgotPassword(input: VerifyForgotPasswordInput!): VerifyForgotPasswordOutput!
+  createCar(input: CreateCarInput!): CreateCarOutput!
+  updateCar(input: UpdateCarInput!): UpdateCarOutput!
+  deleteCar(input: DeleteCarInput!): DeleteCarOutput!
+  createMotorBike(input: CreateMotorBikeInput!): CreateMotorBikeOutput!
+  updateMotorBike(input: UpdateMotorBikeInput!): UpdateMotorBikeOutput!
+  deleteMotorBike(input: DeleteMotorBikeInput!): DeleteMotorBikeOutput!
+  createBooking(input: CreateBookingInput!): CreateBookingOutput!
+  updateBookingStatus(input: UpdateBookingStatusInput!): UpdateBookingStatusOutput!
 }
 
 input UpdateUserInput {
@@ -143,4 +441,171 @@ input VerifyForgotPasswordInput {
   verificationToken: String!
   password: String!
   confirmPassword: String!
+}
+
+input CreateCarInput {
+  name: String!
+  engineType: EngineType!
+  manufactureYear: Float!
+  price: Float!
+  maxDistance: Float
+  additionalDistancePrice: Float!
+  procedures: ProcedureInputType!
+  images: [StoredFileInputType!]
+  totalQuantity: Float!
+  acceptedPayment: [Payment!]!
+  carType: CarType!
+  carBrand: CarBrand!
+  transmissionType: TransmissionType!
+  consumption: Float!
+  features: [String!]!
+  bookings: [BookingInputType!]
+}
+
+input BookingInputType {
+  bookingCode: String!
+  user: UserInputType
+  homeDelivery: String
+  startDate: DateTime!
+  endDate: DateTime!
+  totalPrice: Float!
+  note: String
+  payment: Payment!
+  status: BookingStatus!
+  rating: Float
+  feedBack: String
+  vehicleType: VehicleType!
+  car: CarInputType
+  motorBike: MotorBikeInputType
+}
+
+input UserInputType {
+  email: String!
+  verified: Boolean!
+  password: String!
+  name: String!
+  role: UserRole!
+  address: String
+  phoneNumber: String
+  avatar: StoredFileInputType
+  bookings: [BookingInputType!] = {}
+}
+
+input CarInputType {
+  name: String!
+  rating: Float!
+  engineType: EngineType!
+  manufactureYear: Float!
+  price: Float!
+  maxDistance: Float
+  additionalDistancePrice: Float!
+  procedures: ProcedureInputType!
+  images: [StoredFileInputType!]
+  totalQuantity: Float!
+  vehicleStatuses: [VehicleStatusInputType!]!
+  acceptedPayment: [Payment!]!
+  carType: CarType!
+  carBrand: CarBrand!
+  transmissionType: TransmissionType!
+  consumption: Float!
+  features: [String!]!
+  bookings: [BookingInputType!]
+}
+
+input MotorBikeInputType {
+  name: String!
+  rating: Float!
+  engineType: EngineType!
+  manufactureYear: Float!
+  price: Float!
+  maxDistance: Float
+  additionalDistancePrice: Float!
+  procedures: ProcedureInputType!
+  images: [StoredFileInputType!]
+  totalQuantity: Float!
+  vehicleStatuses: [VehicleStatusInputType!]!
+  acceptedPayment: [Payment!]!
+  bookings: [BookingInputType!]
+  transmissionType: TransmissionType!
+  motorBikeBrand: MotorBikeBrand!
+}
+
+input UpdateCarInput {
+  name: String
+  engineType: EngineType
+  manufactureYear: Float
+  price: Float
+  maxDistance: Float
+  additionalDistancePrice: Float
+  procedures: ProcedureInputType
+  images: [StoredFileInputType!]
+  totalQuantity: Float
+  acceptedPayment: [Payment!]
+  carType: CarType
+  carBrand: CarBrand
+  transmissionType: TransmissionType
+  consumption: Float
+  features: [String!]
+  bookings: [BookingInputType!]
+  carId: ID!
+}
+
+input DeleteCarInput {
+  carId: ID!
+}
+
+input CreateMotorBikeInput {
+  name: String!
+  rating: Float!
+  engineType: EngineType!
+  manufactureYear: Float!
+  price: Float!
+  maxDistance: Float
+  additionalDistancePrice: Float!
+  procedures: ProcedureInputType!
+  images: [StoredFileInputType!]
+  totalQuantity: Float!
+  vehicleStatuses: [VehicleStatusInputType!]!
+  acceptedPayment: [Payment!]!
+  bookings: [BookingInputType!]
+  transmissionType: TransmissionType!
+  motorBikeBrand: MotorBikeBrand!
+}
+
+input UpdateMotorBikeInput {
+  name: String
+  rating: Float
+  engineType: EngineType
+  manufactureYear: Float
+  price: Float
+  maxDistance: Float
+  additionalDistancePrice: Float
+  procedures: ProcedureInputType
+  images: [StoredFileInputType!]
+  totalQuantity: Float
+  vehicleStatuses: [VehicleStatusInputType!]
+  acceptedPayment: [Payment!]
+  bookings: [BookingInputType!]
+  transmissionType: TransmissionType
+  motorBikeBrand: MotorBikeBrand
+  motorBikeId: ID!
+}
+
+input DeleteMotorBikeInput {
+  motorBikeId: ID!
+}
+
+input CreateBookingInput {
+  homeDelivery: String
+  startDate: DateTime!
+  endDate: DateTime!
+  note: String
+  payment: Payment!
+  vehicleType: VehicleType!
+  vehicleId: ID!
+}
+
+input UpdateBookingStatusInput {
+  status: BookingStatus!
+  bookingId: Int!
 }

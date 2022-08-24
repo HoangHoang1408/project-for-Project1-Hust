@@ -10,7 +10,7 @@ import { CoreOutput } from 'src/common/dto/output.dto';
 import { createError } from 'src/common/utils';
 import { EmailService } from 'src/email/email.service';
 import { User } from 'src/user/entities/user.entity';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { SignUpInput, VerifyEmailInput, VerifyEmailOutput } from './dto';
 import {
   ForgotPasswordInput,
@@ -30,6 +30,7 @@ export class AuthService {
     private readonly verificationRepo: Repository<Verification>,
     private readonly emailService: EmailService,
     private readonly configService: ConfigService,
+    private readonly dataSource: DataSource,
   ) {}
 
   async signUp({
@@ -39,7 +40,7 @@ export class AuthService {
     confirmPassword,
     role,
   }: SignUpInput): Promise<CoreOutput> {
-    let user: User, verification: Verification;
+    let user: User;
     try {
       if (password != confirmPassword)
         return createError('Repassword', 'Confirm password does not match');
@@ -50,45 +51,39 @@ export class AuthService {
       });
       if (existedUser)
         return createError('Email', 'Email was already registered');
-      user = await this.userRepo.save(
-        this.userRepo.create({
+      await this.dataSource.transaction(async (etm) => {
+        user = await etm.save(
+          this.userRepo.create({
+            email,
+            name,
+            password,
+            role,
+          }),
+        );
+        await etm.save(
+          this.verificationRepo.create({
+            user,
+            verificationType: VerificationType.EMAIL_VERIFICATION,
+          }),
+        );
+        await this.emailService.sendConfirmEmail(
           email,
-          name,
-          password,
-          role,
-        }),
-      );
-      verification = await this.verificationRepo.save(
-        this.verificationRepo.create({
-          user,
-          verificationType: VerificationType.EMAIL_VERIFICATION,
-        }),
-      );
-      await this.emailService.sendConfirmEmail(
-        email,
-        jwt.sign(
-          {
-            userId: user.id,
-          },
-          this.configService.get<string>('VERIFY_TOKEN_SECRET'),
-        ),
-      );
+          jwt.sign(
+            {
+              userId: user.id,
+            },
+            this.configService.get<string>('VERIFY_TOKEN_SECRET'),
+          ),
+        );
+      });
       return {
         ok: true,
       };
     } catch (err) {
-      console.log(err);
-      try {
-        await Promise.all([
-          this.userRepo.remove(user),
-          this.verificationRepo.remove(verification),
-        ]);
-      } finally {
-        return createError(
-          'Server',
-          'Server error.\n Can not sign up new user right now!',
-        );
-      }
+      return createError(
+        'Server',
+        'Server error.\n Can not sign up new user right now!',
+      );
     }
   }
 
