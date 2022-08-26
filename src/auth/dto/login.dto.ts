@@ -10,6 +10,6 @@ export class LoginOutPut extends CoreOutput {
   @Field({ nullable: true })
   accessToken?: string;
 
-  @Field(() => SimpleUser)
+  @Field(() => SimpleUser, { nullable: true })
   user?: SimpleUser;
 }

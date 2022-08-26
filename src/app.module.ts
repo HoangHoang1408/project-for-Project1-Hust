@@ -45,6 +45,7 @@ import { VehicleModule } from './vehicle/vehicle.module';
         FIREBASE_PROJECT_ID: Joi.string().required(),
         FIREBASE_STORAGE_BUCKET: Joi.string().required(),
         FIREBASE_APP_ID: Joi.string().required(),
+        CLIENT_DOMAIN: Joi.string().required(),
       }),
     }),
     TypeOrmModule.forRoot({
@@ -64,6 +65,10 @@ import { VehicleModule } from './vehicle/vehicle.module';
       playground: true,
       context: ({ req, res }: { req: Request; res: Response }) => {
         return { req, res, [ACCESS_TOKEN]: req.get(ACCESS_TOKEN) };
+      },
+      cors: {
+        origin: process.env.CLIENT_DOMAIN,
+        credentials: true,
       },
     }),
     EmailModule.forRoot({

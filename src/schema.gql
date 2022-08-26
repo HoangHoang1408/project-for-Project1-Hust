@@ -189,7 +189,7 @@ type LoginOutPut {
   ok: Boolean!
   error: CustomError
   accessToken: String
-  user: SimpleUser!
+  user: SimpleUser
 }
 
 type SignUpOutPut {

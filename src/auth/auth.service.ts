@@ -107,6 +107,8 @@ export class AuthService {
           expiresIn: this.configService.get<string>(ACCESS_TOKEN_EXPIRED_IN),
         },
       );
+      console.log(2);
+      console.log(user);
       return {
         ok: true,
         accessToken,
@@ -118,6 +120,7 @@ export class AuthService {
         },
       };
     } catch (err) {
+      console.log(err);
       return createError('Server', 'Server error.\n Can not login right now!');
     }
   }
