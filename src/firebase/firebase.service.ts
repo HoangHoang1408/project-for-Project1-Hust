@@ -50,7 +50,6 @@ export class FirebaseService {
         },
       };
     } catch (error) {
-      console.log(error);
       throw new ServiceUnavailableException(
         'Can not upload file. Please try again later',
       );

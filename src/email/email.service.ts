@@ -57,7 +57,7 @@ export class EmailService {
   }
 
   sendForgotPassword(to: string, forgotPasswordCode: string) {
-    const forgotPasswordLink = `${this.clientDomain}/forgot-password/${forgotPasswordCode}`;
+    const forgotPasswordLink = `${this.clientDomain}/auth/forgotPassword/changePassword?token=${forgotPasswordCode}`;
     const html = this.transformTemplate(ForgotPasswordTemplate, {
       CLIENT_LINK: this.clientDomain,
       FORGOT_PASSWORD_LINK: forgotPasswordLink,

@@ -4,15 +4,10 @@ import { range, sample, sampleSize } from 'lodash';
 import {
   Car,
   CarBrand,
-  CarType,
-  TransmissionType,
-} from 'src/vehicle/entities/car.entity';
-import { MotorBike } from 'src/vehicle/entities/motobike.entity';
-import {
   EngineType,
-  Payment,
-  VehicleStatus,
-} from 'src/vehicle/entities/vehicle.entity';
+  TransmissionType,
+} from 'src/car/entities/car.entity';
+import { CarType, CarTypeEnum, Payment } from 'src/car/entities/carType.entity';
 import { Repository } from 'typeorm';
 
 @Injectable()
@@ -25,14 +20,14 @@ export class DataService {
     .flat();
   constructor(
     @InjectRepository(Car) private readonly carRepo: Repository<Car>,
-    @InjectRepository(MotorBike)
-    private readonly motorBikeRepo: Repository<MotorBike>,
+    @InjectRepository(CarType)
+    private readonly carTypeRepo: Repository<CarType>,
   ) {
-    // this.insertCarData(100);
+    // this.insertCarData(15);
+    // this.insertCarTypes()
   }
   async insertCarData(numOfCars: number) {
     const carBrands = Object.values(CarBrand);
-    const carTypes = Object.values(CarType);
     const transmissionTypes = Object.values(TransmissionType);
     const consumptions = range(20).map(
       () => Math.round((Math.random() * 8 + 2) * 10) / 10,
@@ -50,46 +45,47 @@ export class DataService {
       'Cảnh báo điểm mù',
     ];
     const manufactureYears = range(2014, 2022, 1);
-    const price = range(300, 1000, 100);
-    const maxDistance = range(300, 1500, 100);
-    const additionalDistancePrice = range(5, 25, 1);
-    const totalQuantity = range(1, 10, 1);
-    const payments = Object.values(Payment);
+    const carTypes = await this.carTypeRepo.find();
     const createCarRequests = range(numOfCars).map(async () => {
       const cb = sample(carBrands);
-      const quantity = sample(totalQuantity);
       const tempCar: Partial<Car> = {
         name: cb + ' ' + sampleSize(this.alphabet, 10).join(''),
         carBrand: cb,
         engineType: sample(engineTypes),
         manufactureYear: sample(manufactureYears),
-        price: sample(price),
-        maxDistance: sample(maxDistance),
-        additionalDistancePrice: sample(additionalDistancePrice),
-        totalQuantity: quantity,
         features: sampleSize(features, sample(range(1, features.length + 1))),
         transmissionType: sample(transmissionTypes),
         consumption: sample(consumptions),
-        carType: sample(carTypes),
-        procedures: {
-          verificationPaper: ['CMND', 'Bằng lái'],
-          mortgatePaper: ['Sổ hộ khẩu'],
-          mortgateProperty: ['Xe máy hoặc > 20 triệu tiền cọc'],
+        vehicleStatus: {
+          booked: false,
+          goodCondition: true,
         },
-        acceptedPayment: sampleSize<Payment>(
-          payments,
-          sample(range(1, payments.length + 1)),
-        ),
-        vehicleStatuses: range(quantity).map<VehicleStatus>((q) => {
-          return {
-            booked: false,
-            goodCondition: true,
-            vehicleNumber: q,
-          };
-        }),
+        licensePlate: sampleSize(this.alphabet, 12).join(''),
+        carType: sample(carTypes),
       };
       await this.carRepo.save(this.carRepo.create(tempCar));
     });
     await Promise.all(createCarRequests);
+  }
+  async insertCarTypes() {
+    const carTypes = Object.values(CarTypeEnum);
+    const payments = Object.values(Payment);
+    const objs = carTypes.map((ct) =>
+      this.carTypeRepo.create({
+        carType: ct,
+        acceptedPayment: sampleSize(payments, 2),
+        additionalDistancePrice: sample(range(5, 10)),
+        maxDistance: sample(range(200, 1000, 100)),
+        price: sample(range(500, 1000, 100)),
+        procedures: {
+          verificationPaper: ['CMND', 'Bằng lái xe'],
+          mortgatePaper: ['Sổ hộ khẩu'],
+          mortgateProperty: [
+            'Tiền 15 triệu hoặc xe máy + đăng kí xe giá trị tương đương',
+          ],
+        },
+      }),
+    );
+    await this.carTypeRepo.save(objs);
   }
 }

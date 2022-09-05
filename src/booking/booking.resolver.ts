@@ -3,8 +3,10 @@ import { Roles } from 'src/auth/role.decorator';
 import { CurrentUser } from 'src/auth/user.decorator';
 import { User } from 'src/user/entities/user.entity';
 import { BookingService } from './booking.service';
-import { CheckVehicleAvailableInput, CheckVehicleAvailableOutput } from './dto';
+import { CheckCarAvailableInput, CheckCarAvailableOutput } from './dto';
 import {
+  BookingFeedBackInput,
+  BookingFeedBackOutput,
   CreateBookingInput,
   CreateBookingOutput,
   GetBookingDetailInput,
@@ -22,9 +24,9 @@ export class BookingResolver {
   constructor(private readonly bookingService: BookingService) {}
 
   @Roles(['Any'])
-  @Query(() => CheckVehicleAvailableOutput)
-  checkVehicleAvailable(@Args('input') input: CheckVehicleAvailableInput) {
-    return this.bookingService.checkVehicleAvailable(input);
+  @Query(() => CheckCarAvailableOutput)
+  checkCarAvailable(@Args('input') input: CheckCarAvailableInput) {
+    return this.bookingService.checkCarAvailable(input);
   }
 
   @Roles(['Any'])
@@ -56,5 +58,14 @@ export class BookingResolver {
   @Mutation(() => UpdateBookingStatusOutput)
   updateBookingStatus(@Args('input') input: UpdateBookingStatusInput) {
     return this.bookingService.updateBookingStatus(input);
+  }
+
+  @Mutation(() => BookingFeedBackOutput)
+  @Roles(['Normal'])
+  bookingFeedback(
+    @CurrentUser() currentUser,
+    @Args('input') input: BookingFeedBackInput,
+  ) {
+    return this.bookingService.bookingFeedBack(currentUser, input);
   }
 }

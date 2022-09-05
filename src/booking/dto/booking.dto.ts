@@ -6,12 +6,12 @@ import {
   ObjectType,
   PickType,
 } from '@nestjs/graphql';
+import { CarTypeEnum } from 'src/car/entities/carType.entity';
 import {
   CoreOutput,
   PaginationInput,
   PaginationOutput,
 } from 'src/common/dto/output.dto';
-import { VehicleType } from 'src/vehicle/entities/vehicle.entity';
 import { Booking } from '../entities/booking.entity';
 @InputType()
 export class CreateBookingInput extends PickType(Booking, [
@@ -20,10 +20,12 @@ export class CreateBookingInput extends PickType(Booking, [
   'homeDelivery',
   'note',
   'payment',
-  'vehicleType',
+  'quantity',
+  'customerName',
+  'customerPhone',
 ]) {
-  @Field(() => ID)
-  vehicleId: number;
+  @Field(() => CarTypeEnum)
+  carTypeName: CarTypeEnum;
 }
 
 @ObjectType()
@@ -53,17 +55,17 @@ export class GetBookingDetailOutput extends CoreOutput {
 
 @InputType()
 export class GetBookingsByInput {
+  @Field(() => CarTypeEnum, { nullable: true })
+  carType?: CarTypeEnum;
+
   @Field(() => Date, { nullable: true })
   startDate?: Date;
 
   @Field(() => Date, { nullable: true })
   endDate?: Date;
 
-  @Field(() => VehicleType)
-  vehicleType: VehicleType;
-
-  @Field(() => PaginationInput, { nullable: true })
-  pagination?: PaginationInput;
+  @Field(() => PaginationInput)
+  pagination: PaginationInput;
 }
 @ObjectType()
 export class GetBookingsByOutput extends CoreOutput {
@@ -73,3 +75,14 @@ export class GetBookingsByOutput extends CoreOutput {
   @Field(() => PaginationOutput, { nullable: true })
   pagination?: PaginationOutput;
 }
+
+@InputType()
+export class BookingFeedBackInput extends PickType(Booking, ['id']) {
+  @Field(() => Int)
+  rating: number;
+
+  @Field({ nullable: true })
+  feedback?: string;
+}
+@ObjectType()
+export class BookingFeedBackOutput extends CoreOutput {}

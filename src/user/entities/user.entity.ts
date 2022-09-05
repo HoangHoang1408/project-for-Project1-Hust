@@ -60,7 +60,9 @@ export class User extends CoreEntity {
 
   @Field({ nullable: true })
   @Column({ nullable: true })
-  @IsPhoneNumber('VN')
+  @IsPhoneNumber('VN', {
+    message: 'Số điện thoại sai định dạng',
+  })
   @IsOptional()
   phoneNumber?: string;
 
@@ -77,7 +79,6 @@ export class User extends CoreEntity {
   @BeforeUpdate()
   async hashPassword() {
     if (!this.password) return;
-    console.log(this.password);
     this.password = await hash(this.password, 12);
   }
 

@@ -13,3 +13,15 @@ export class LoginOutPut extends CoreOutput {
   @Field(() => SimpleUser, { nullable: true })
   user?: SimpleUser;
 }
+
+@InputType()
+export class NewAccessTokenInput {
+  @Field()
+  accessToken: string;
+}
+
+@ObjectType()
+export class NewAccessTokenOutput extends CoreOutput {
+  @Field({ nullable: true })
+  accessToken?: string;
+}

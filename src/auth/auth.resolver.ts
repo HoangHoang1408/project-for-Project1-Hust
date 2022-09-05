@@ -12,6 +12,7 @@ import {
   VerifyForgotPasswordInput,
   VerifyForgotPasswordOutput,
 } from './dto';
+import { NewAccessTokenInput, NewAccessTokenOutput } from './dto/login.dto';
 
 @Resolver()
 export class AuthResolver {
@@ -19,6 +20,11 @@ export class AuthResolver {
   @Query(() => LoginOutPut)
   login(@Args('input') input: LoginInput) {
     return this.authService.login(input);
+  }
+  
+  @Query(() => NewAccessTokenOutput)
+  newAccessToken(@Args('input') input: NewAccessTokenInput) {
+    return this.authService.newAccessToken(input);
   }
 
   @Query(() => VerifyEmailOutput)

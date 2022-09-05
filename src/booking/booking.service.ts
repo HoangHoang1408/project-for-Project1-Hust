@@ -1,22 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { randomBytes } from 'crypto';
+import { sampleSize } from 'lodash';
+import { Car } from 'src/car/entities/car.entity';
+import { CarType } from 'src/car/entities/carType.entity';
 import { createError } from 'src/common/utils';
 import { User, UserRole } from 'src/user/entities/user.entity';
-import { Car } from 'src/vehicle/entities/car.entity';
-import { MotorBike } from 'src/vehicle/entities/motobike.entity';
-import { VehicleType } from 'src/vehicle/entities/vehicle.entity';
+import { FindManyOptions, In, Repository } from 'typeorm';
 import {
-  Between,
-  DataSource,
-  FindOptionsWhere,
-  LessThanOrEqual,
-  MoreThanOrEqual,
-  Repository,
-} from 'typeorm';
-import {
-  CheckVehicleAvailableInput,
-  CheckVehicleAvailableOutput,
+  CheckCarAvailableInput,
+  CheckCarAvailableOutput,
   CreateBookingInput,
   CreateBookingOutput,
   GetBookingDetailInput,
@@ -26,64 +19,67 @@ import {
   UpdateBookingInput,
   UpdateBookingOutput,
 } from './dto';
+import { BookingFeedBackInput, BookingFeedBackOutput } from './dto/booking.dto';
 import { Booking, BookingStatus } from './entities/booking.entity';
-export function checkVechicleAvailable(input: {
-  vehicle: Car | MotorBike;
-  startDate: Date;
-  endDate: Date;
-}): boolean {
-  const { vehicle, startDate, endDate } = input;
-  if (startDate < endDate) return false;
-  if (!vehicle.bookings) return true;
-  let count = 0;
-  vehicle.bookings
-    .filter((booking) => booking.status === BookingStatus.VEHICLE_TAKEN)
-    .forEach((booking) => {
-      const bookingStartDate = new Date(booking.startDate);
-      const bookingEndDate = new Date(booking.endDate);
-      const a = bookingStartDate <= startDate && bookingEndDate > startDate;
-      const b = bookingStartDate < endDate && bookingEndDate >= endDate;
-      if (a || b) count += 1;
-    });
-  if (count == vehicle.totalQuantity) return false;
-  return true;
-}
+
 @Injectable()
 export class BookingService {
   constructor(
     @InjectRepository(Booking)
     private readonly bookingRepo: Repository<Booking>,
     @InjectRepository(Car) private readonly carRepo: Repository<Car>,
-    @InjectRepository(MotorBike)
-    private readonly motorBikeRepo: Repository<MotorBike>,
-    @InjectRepository(User)
-    private readonly userRepo: Repository<User>,
-    private readonly dataSource: DataSource,
+    @InjectRepository(CarType)
+    private readonly carTypeRepo: Repository<CarType>,
   ) {}
-
-  async checkVehicleAvailable(
-    input: CheckVehicleAvailableInput,
-  ): Promise<CheckVehicleAvailableOutput> {
+  private async checkCar(input: CheckCarAvailableInput) {
+    const { carType: carTypeName, endDate, quantity, startDate } = input;
     try {
-      // get vehicle
-      const { vehicleId, startDate, endDate, vehicleType } = input;
-      let vehicle: Car | MotorBike;
-      const condition = {
-        where: { id: vehicleId },
-        relations: ['bookings'],
-      };
-      if (vehicleType === VehicleType.CAR)
-        vehicle = await this.carRepo.findOne(condition);
-      else if (vehicleType === VehicleType.MOTOR_BIKE)
-        vehicle = await this.motorBikeRepo.findOne(condition);
-
-      // check and return result
-      if (!vehicle) return createError('Vehicle', 'Vehicle does not exist');
-      if (!checkVechicleAvailable({ vehicle, startDate, endDate }))
+      const carType = await this.carTypeRepo.findOne({
+        where: {
+          carType: carTypeName,
+        },
+        relations: {
+          bookings: {
+            cars: true,
+          },
+          cars: true,
+        },
+      });
+      if (!carType) return false;
+      const bookings = carType.bookings;
+      const cars = carType.cars;
+      const totalCar = cars.length;
+      const bookedIds = new Set<number>();
+      for (const booking of bookings) {
+        if (
+          new Date(booking.startDate) > endDate ||
+          new Date(booking.endDate) < startDate
+        )
+          continue;
+        booking.cars.forEach((c) => bookedIds.add(c.id));
+        if (bookedIds.size + +quantity > totalCar) false;
+      }
+      return true;
+    } catch (error) {
+      return false;
+    }
+  }
+  async checkCarAvailable(
+    input: CheckCarAvailableInput,
+  ): Promise<CheckCarAvailableOutput> {
+    const { endDate, startDate } = input;
+    try {
+      if (startDate >= endDate)
+        return createError(
+          'Date input',
+          'Thời gian bắt đầu và kết thúc không hợp lệ',
+        );
+      if (!this.checkCar(input)) {
         return {
           ok: true,
           available: false,
         };
+      }
       return {
         ok: true,
         available: true,
@@ -97,68 +93,81 @@ export class BookingService {
     currentUser: User,
     input: CreateBookingInput,
   ): Promise<CreateBookingOutput> {
+    const {
+      carTypeName,
+      endDate,
+      homeDelivery,
+      note,
+      payment,
+      quantity,
+      startDate,
+      customerName,
+      customerPhone,
+    } = input;
     try {
-      const {
-        vehicleId,
-        endDate,
-        startDate,
-        note,
-        payment,
-        homeDelivery,
-        vehicleType,
-      } = input;
+      if (startDate >= endDate)
+        return createError(
+          'Date input',
+          'Thời gian bắt đầu và kết thúc không hợp lệ',
+        );
+      const carType = await this.carTypeRepo.findOne({
+        where: {
+          carType: carTypeName,
+        },
+        relations: {
+          cars: true,
+        },
+      });
 
-      // get the booked vehicle
-      let vehicle: Car | MotorBike;
-      const findOneObject = {
-        where: { id: vehicleId },
-        relations: ['bookings'],
-      };
-      const repoObject = {
-        [VehicleType.CAR]: this.carRepo,
-        [VehicleType.MOTOR_BIKE]: this.motorBikeRepo,
-      };
-      vehicle = await repoObject[vehicleType].findOne(findOneObject);
-
-      if (!vehicle) return createError('Vehicle', 'Vehicle does not exist');
-      if (!checkVechicleAvailable({ vehicle, startDate, endDate }))
-        return createError('Input', 'Can not book vehicle on those days');
-
-      // create booking
+      if (!carType)
+        return createError('CarType', 'Loại xe yêu cầu không tồn tại');
+      let bookings = await this.bookingRepo.find({
+        where: {
+          carType: {
+            carType: carTypeName,
+          },
+          status: In([BookingStatus.DEPOSITED, BookingStatus.VEHICLE_TAKEN]),
+        },
+        relations: {
+          cars: true,
+        },
+      });
+      if (!bookings) bookings = [];
+      const cars = carType.cars;
+      const totalCar = cars.length;
+      const bookedIds = new Set<number>();
+      for (const booking of bookings) {
+        if (
+          new Date(booking.startDate) > endDate ||
+          new Date(booking.endDate) < startDate
+        )
+          continue;
+        booking.cars.forEach((c) => bookedIds.add(c.id));
+        if (bookedIds.size + quantity > totalCar)
+          return createError('Số lượng xe', 'Hiện không còn đủ xe để đặt');
+      }
+      const availableCars = cars.filter((c) => !bookedIds.has(c.id));
       const bookingCode = (
         randomBytes(4).toString('hex') + Date.now().toString(18)
       ).toUpperCase();
-      const booking = this.bookingRepo.create({
-        bookingCode,
-        endDate,
-        startDate,
-        note,
-        payment,
-        homeDelivery,
-        status: BookingStatus.PENDING,
-        totalPrice: vehicle.price,
-        user: currentUser,
-      });
-      if (vehicleType === VehicleType.CAR) {
-        booking.car = vehicle as Car;
-        booking.vehicleType = VehicleType.CAR;
-      } else if (vehicleType === VehicleType.MOTOR_BIKE) {
-        booking.vehicleType = VehicleType.MOTOR_BIKE;
-        booking.motorBike = vehicle as MotorBike;
-      }
-
-      // udpate vehicle status of booked vehicle
-      const vehicleStatus = vehicle.vehicleStatuses.find(
-        (vs) => !vs.booked && vs.goodCondition,
+      await this.bookingRepo.save(
+        this.bookingRepo.create({
+          cars: sampleSize(availableCars, quantity),
+          user: currentUser,
+          bookingCode,
+          carType,
+          startDate,
+          endDate,
+          homeDelivery,
+          note,
+          payment,
+          status: BookingStatus.NOT_DEPOSITE,
+          totalPrice: carType.price * quantity,
+          quantity,
+          customerName,
+          customerPhone,
+        }),
       );
-      if (!vehicleStatus)
-        return createError('Vehicle', 'Can not book vehicle on those days');
-      booking.vehicleNumber = vehicleStatus.vehicleNumber;
-      vehicleStatus.booked = true;
-      await this.dataSource.transaction(async (etm) => {
-        await etm.save(vehicle);
-        await etm.save(booking);
-      });
       return {
         ok: true,
         bookingCode,
@@ -176,7 +185,7 @@ export class BookingService {
       const booking = await this.bookingRepo.findOneBy({ id: bookingId });
       if (!booking) return createError('Booking id', 'Invalid booking id');
       if (
-        (booking.status === BookingStatus.PENDING &&
+        (booking.status === BookingStatus.NOT_DEPOSITE &&
           status !== BookingStatus.VEHICLE_TAKEN) ||
         (booking.status === BookingStatus.VEHICLE_TAKEN &&
           status !== BookingStatus.FINISHED)
@@ -201,84 +210,99 @@ export class BookingService {
         where: { id: bookingId },
         relations: ['user'],
       });
-      if (!booking)
-        return createError('Booking id', 'Can not find booking with given id');
+      if (!booking) return createError('Booking id', 'Đơn thuê không tồn tại');
       if (
         currentUser.role !== UserRole.Admin &&
         booking.user.id !== currentUser.id
       )
-        return createError(
-          'Booking id',
-          'You are not allowed to view this booking',
-        );
+        return createError('Booking id', 'Bạn không có quyền xem đơn này');
       return {
         ok: true,
         booking,
       };
     } catch (error) {
-      return createError('Server', 'Server error, please try again later');
+      return createError('Server', 'Lỗi server, thử lại sau!');
     }
   }
 
   async getBookingsBy(
     currentUser: User,
     {
-      vehicleType,
+      carType,
       endDate,
       startDate,
       pagination: { page, resultsPerPage },
     }: GetBookingsByInput,
   ): Promise<GetBookingsByOutput> {
     try {
-      if (endDate && startDate && startDate > endDate)
-        return createError('Input date', 'Invalid input dates');
-      let bookings: Booking[] | null;
-      let findCondition: FindOptionsWhere<Booking>;
-      if (startDate && endDate) {
-        findCondition = {
-          vehicleType,
-          createdAt: Between<Date>(startDate, endDate),
-        };
-      } else if (startDate) {
-        findCondition = {
-          vehicleType,
-          createdAt: MoreThanOrEqual(startDate),
-        };
-      } else if (endDate) {
-        findCondition = {
-          vehicleType,
-          createdAt: LessThanOrEqual(endDate),
-        };
-      }
-      if (currentUser.role !== UserRole.Admin) {
-        bookings = await this.bookingRepo.find({
-          skip: (page - 1) * resultsPerPage,
-          take: resultsPerPage,
+      let bookings: Booking[], totalResults: number;
+      let findOption: FindManyOptions<Booking>;
+      if (currentUser.role === UserRole.Normal) {
+        findOption = {
           where: {
             user: {
               id: currentUser.id,
             },
-            ...findCondition,
           },
-        });
-      } else {
-        bookings = await this.bookingRepo.find({
-          where: findCondition,
-          skip: (page - 1) * resultsPerPage,
-          take: resultsPerPage,
+        };
+      }
+      if (carType) {
+        findOption.where['carType'] = {
+          carType,
+        };
+      }
+      bookings = await this.bookingRepo.find(findOption);
+      if (startDate && endDate) {
+        if (startDate >= endDate)
+          return createError('Date', 'Ngày bắt đầu, kết thúc không hợp lệ');
+        bookings = bookings.filter((b) => {
+          const s = new Date(b.startDate);
+          const e = new Date(b.endDate);
+          return !(s > new Date(endDate) || e < new Date(startDate));
         });
       }
-      const totalResults = bookings.length;
+      totalResults = bookings.length;
       return {
         ok: true,
-        bookings,
+        bookings: bookings.slice(
+          (page - 1) * resultsPerPage,
+          page * resultsPerPage,
+        ),
         pagination: {
+          totalResults,
           totalPages: Math.floor(totalResults / resultsPerPage) + 1,
-          totalResults: totalResults,
         },
       };
     } catch (error) {
-      return createError('Server', 'Server error, please try again later');
+      return createError('Server', 'Lỗi server, thử lại sau');
+    }
+  }
+
+  async bookingFeedBack(
+    currentUser: User,
+    { feedback, rating, id }: BookingFeedBackInput,
+  ): Promise<BookingFeedBackOutput> {
+    try {
+      const booking = await this.bookingRepo.findOne({
+        where: {
+          id,
+        },
+      });
+      if (!booking) return createError('Input', 'Không tồn tại đơn thuê');
+      if (currentUser.id !== booking.userId)
+        return createError('User', 'Bạn không có quyền phản hồi đơn này');
+      if (booking.rating)
+        return createError('User', 'Đơn thuê đã được phản hồi trước đó');
+      await this.bookingRepo.save({
+        ...booking,
+        feedBack: feedback,
+        rating,
+      });
+      return {
+        ok: true,
+      };
+    } catch (error) {
+      return createError('Server', 'Lỗi server, thử lại sau');
     }
   }
 }

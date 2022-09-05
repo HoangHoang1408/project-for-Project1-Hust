@@ -16,7 +16,12 @@ import {
   ForgotPasswordInput,
   ForgotPasswordOutput,
 } from './dto/forgotPassword.dto';
-import { LoginInput, LoginOutPut } from './dto/login.dto';
+import {
+  LoginInput,
+  LoginOutPut,
+  NewAccessTokenInput,
+  NewAccessTokenOutput,
+} from './dto/login.dto';
 import {
   VerifyForgotPasswordInput,
   VerifyForgotPasswordOutput,
@@ -32,7 +37,6 @@ export class AuthService {
     private readonly configService: ConfigService,
     private readonly dataSource: DataSource,
   ) {}
-
   async signUp({
     email,
     name,
@@ -86,7 +90,6 @@ export class AuthService {
       );
     }
   }
-
   async login({ email, password }: LoginInput): Promise<LoginOutPut> {
     try {
       const user = await this.userRepo.findOne({
@@ -107,24 +110,43 @@ export class AuthService {
           expiresIn: this.configService.get<string>(ACCESS_TOKEN_EXPIRED_IN),
         },
       );
-      console.log(2);
-      console.log(user);
       return {
         ok: true,
         accessToken,
-        user: {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          role: user.role,
-        },
       };
     } catch (err) {
       console.log(err);
       return createError('Server', 'Server error.\n Can not login right now!');
     }
   }
-
+  async newAccessToken({
+    accessToken,
+  }: NewAccessTokenInput): Promise<NewAccessTokenOutput> {
+    try {
+      const decoded = jwt.verify(
+        accessToken,
+        this.configService.get<string>(ACCESS_TOKEN_SECRET),
+      );
+      if (!decoded || !decoded['userId']) throw new jwt.JsonWebTokenError('');
+      const newAccessToken = jwt.sign(
+        {
+          userId: decoded['userId'],
+        },
+        this.configService.get<string>(ACCESS_TOKEN_SECRET),
+        {
+          expiresIn: this.configService.get<string>(ACCESS_TOKEN_EXPIRED_IN),
+        },
+      );
+      return {
+        ok: true,
+        accessToken: newAccessToken,
+      };
+    } catch (err) {
+      if (err instanceof jwt.JsonWebTokenError)
+        return createError('accessToken', 'Access token không hợp lệ');
+      return createError('Server', 'Server error.\n Can not login right now!');
+    }
+  }
   async forgotPassword({
     email,
   }: ForgotPasswordInput): Promise<ForgotPasswordOutput> {

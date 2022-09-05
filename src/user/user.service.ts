@@ -28,11 +28,8 @@ export class UserService {
       return {
         ok: true,
       };
-    } catch {
-      return createError(
-        'Server',
-        'Server error, can not update user right now',
-      );
+    } catch (err) {
+      return createError('Server', 'Lỗi serer, thử lại sau');
     }
   }
 
@@ -43,7 +40,7 @@ export class UserService {
     try {
       const { password, confirmPassword, currentPassword } = input;
       if (password != confirmPassword)
-        return createError('Password', 'Confirm password does not match!');
+        return createError('Password', 'Mật khẩu xác nhận không khớp!');
       const user = await this.userRepo.findOne({
         where: {
           id: currentUser.id,
@@ -51,17 +48,14 @@ export class UserService {
         select: ['password'],
       });
       if (!(await user.checkPassword(currentPassword)))
-        return createError('Current password', 'Wrong current password');
+        return createError('Current password', 'Mật khẩu hiện tại không đúng');
       currentUser.password = password;
       await this.userRepo.save(currentUser);
       return {
         ok: true,
       };
     } catch (err) {
-      return createError(
-        'Server',
-        "Server error, can not change user's password right now",
-      );
+      return createError('Server', 'Lỗi serer, thử lại sau');
     }
   }
 }

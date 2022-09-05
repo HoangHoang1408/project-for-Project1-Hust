@@ -1,22 +1,23 @@
-import { Field, ID, InputType, ObjectType, PickType } from '@nestjs/graphql';
+import { Field, InputType, ObjectType, PickType } from '@nestjs/graphql';
+import { IsNumberString } from 'class-validator';
+import { CarTypeEnum } from 'src/car/entities/carType.entity';
 import { CoreOutput } from 'src/common/dto/output.dto';
-import { VehicleType } from 'src/vehicle/entities/vehicle.entity';
 import { Booking } from '../entities/booking.entity';
 
 @InputType()
-export class CheckVehicleAvailableInput extends PickType(Booking, [
+export class CheckCarAvailableInput extends PickType(Booking, [
   'startDate',
   'endDate',
 ]) {
-  @Field(() => VehicleType)
-  vehicleType: VehicleType;
+  @Field(() => CarTypeEnum)
+  carType: CarTypeEnum;
 
-  @Field(() => ID)
-  vehicleId: number;
+  @Field(() => Number)
+  quantity: string;
 }
 
 @ObjectType()
-export class CheckVehicleAvailableOutput extends CoreOutput {
+export class CheckCarAvailableOutput extends CoreOutput {
   @Field({ nullable: true })
   available?: boolean;
 }

@@ -13,7 +13,8 @@ import {
   PaginationInput,
   PaginationOutput,
 } from 'src/common/dto/output.dto';
-import { Car } from '../entities/car.entity';
+import { Car, VehicleStatus } from '../entities/car.entity';
+import { CarType } from '../entities/carType.entity';
 
 @InputType()
 export class CreateCarInput extends OmitType(Car, [
@@ -21,7 +22,7 @@ export class CreateCarInput extends OmitType(Car, [
   'id',
   'rating',
   'updatedAt',
-  'vehicleStatuses',
+  'vehicleStatus',
 ]) {}
 
 @ObjectType()
@@ -41,7 +42,7 @@ export class GetCarDetailOutput extends CoreOutput {
 
 @InputType()
 export class GetCarsByInput extends PartialType(
-  PickType(Car, ['carType', 'transmissionType', 'carBrand', 'engineType']),
+  PickType(Car, ['transmissionType', 'carBrand', 'engineType']),
 ) {
   @Field(() => Date, { nullable: true })
   @IsDate()
@@ -71,6 +72,9 @@ export class GetCarsByOutput extends CoreOutput {
 export class UpdateCarInput extends PartialType(CreateCarInput) {
   @Field(() => ID)
   carId: number;
+
+  @Field(() => VehicleStatus, { nullable: true })
+  vehicleStatus?: VehicleStatus;
 }
 
 @ObjectType()
@@ -84,3 +88,11 @@ export class DeleteCarInput {
 
 @ObjectType()
 export class DeleteCarOutput extends CoreOutput {}
+
+@InputType()
+export class GetCarTypeInput extends PickType(CarType, ['carType']) {}
+@ObjectType()
+export class GetCarTypeOutput extends CoreOutput {
+  @Field(() => CarType, { nullable: true })
+  carType?: CarType;
+}

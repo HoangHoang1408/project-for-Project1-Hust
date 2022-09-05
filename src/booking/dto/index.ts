@@ -9,16 +9,16 @@ import {
   UpdateBookingStatusOutput,
 } from './booking.dto';
 import {
-  CheckVehicleAvailableInput,
-  CheckVehicleAvailableOutput,
+  CheckCarAvailableInput,
+  CheckCarAvailableOutput,
 } from './checkAvailable.dto';
 export {
   CreateBookingInput,
   CreateBookingOutput,
   UpdateBookingStatusInput as UpdateBookingInput,
   UpdateBookingStatusOutput as UpdateBookingOutput,
-  CheckVehicleAvailableInput,
-  CheckVehicleAvailableOutput,
+  CheckCarAvailableInput,
+  CheckCarAvailableOutput,
   GetBookingDetailInput,
   GetBookingDetailOutput,
   GetBookingsByInput,
