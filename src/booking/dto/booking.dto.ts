@@ -12,7 +12,7 @@ import {
   PaginationInput,
   PaginationOutput,
 } from 'src/common/dto/output.dto';
-import { Booking } from '../entities/booking.entity';
+import { Booking, BookingStatus } from '../entities/booking.entity';
 @InputType()
 export class CreateBookingInput extends PickType(Booking, [
   'startDate',
@@ -55,6 +55,12 @@ export class GetBookingDetailOutput extends CoreOutput {
 
 @InputType()
 export class GetBookingsByInput {
+  @Field({ nullable: true })
+  bookingCode?: string;
+
+  @Field(() => BookingStatus, { nullable: true })
+  bookingStatus?: BookingStatus;
+
   @Field(() => CarTypeEnum, { nullable: true })
   carType?: CarTypeEnum;
 

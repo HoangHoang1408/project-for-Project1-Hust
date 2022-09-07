@@ -22,8 +22,9 @@ import {
 export enum BookingStatus {
   NOT_DEPOSITE = 'Chưa cọc',
   DEPOSITED = 'Đã cọc',
-  VEHICLE_TAKEN = 'VEHICLE_TAKEN',
-  FINISHED = 'FINISHED',
+  VEHICLE_TAKEN = 'Đã nhận xe',
+  FINISHED = 'Đã trả xe',
+  CANCEL = 'Huỷ',
 }
 registerEnumType(BookingStatus, { name: 'BookingStatus' });
 

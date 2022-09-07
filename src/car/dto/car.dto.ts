@@ -3,27 +3,33 @@ import {
   ID,
   InputType,
   ObjectType,
-  OmitType,
   PartialType,
   PickType,
 } from '@nestjs/graphql';
-import { IsDate, IsOptional, ValidateNested } from 'class-validator';
+import { ValidateNested } from 'class-validator';
 import {
   CoreOutput,
   PaginationInput,
   PaginationOutput,
 } from 'src/common/dto/output.dto';
 import { Car, VehicleStatus } from '../entities/car.entity';
-import { CarType } from '../entities/carType.entity';
+import { CarType, CarTypeEnum } from '../entities/carType.entity';
 
 @InputType()
-export class CreateCarInput extends OmitType(Car, [
-  'createdAt',
-  'id',
-  'rating',
-  'updatedAt',
-  'vehicleStatus',
-]) {}
+export class CreateCarInput extends PickType(Car, [
+  'carBrand',
+  'consumption',
+  'engineType',
+  'features',
+  'images',
+  'licensePlate',
+  'manufactureYear',
+  'name',
+  'transmissionType',
+]) {
+  @Field(() => CarTypeEnum, { nullable: true })
+  carType: CarTypeEnum;
+}
 
 @ObjectType()
 export class CreateCarOutput extends CoreOutput {}
@@ -41,18 +47,9 @@ export class GetCarDetailOutput extends CoreOutput {
 }
 
 @InputType()
-export class GetCarsByInput extends PartialType(
-  PickType(Car, ['transmissionType', 'carBrand', 'engineType']),
-) {
-  @Field(() => Date, { nullable: true })
-  @IsDate()
-  @IsOptional()
-  startDate?: Date;
-
-  @Field(() => Date, { nullable: true })
-  @IsDate()
-  @IsOptional()
-  endDate?: Date;
+export class GetCarsByInput {
+  @Field(() => CarTypeEnum, { nullable: true })
+  carType?: CarTypeEnum;
 
   @Field(() => PaginationInput)
   @ValidateNested()

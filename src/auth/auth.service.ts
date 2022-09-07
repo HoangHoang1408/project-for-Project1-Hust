@@ -115,7 +115,6 @@ export class AuthService {
         accessToken,
       };
     } catch (err) {
-      console.log(err);
       return createError('Server', 'Server error.\n Can not login right now!');
     }
   }

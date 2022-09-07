@@ -6,7 +6,7 @@ import { Car } from 'src/car/entities/car.entity';
 import { CarType } from 'src/car/entities/carType.entity';
 import { createError } from 'src/common/utils';
 import { User, UserRole } from 'src/user/entities/user.entity';
-import { FindManyOptions, In, Repository } from 'typeorm';
+import { FindManyOptions, ILike, In, Repository } from 'typeorm';
 import {
   CheckCarAvailableInput,
   CheckCarAvailableOutput,
@@ -177,27 +177,45 @@ export class BookingService {
     }
   }
 
-  async updateBookingStatus({
-    bookingId,
-    status,
-  }: UpdateBookingInput): Promise<UpdateBookingOutput> {
+  async updateBookingStatus(
+    currentUser: User,
+    { bookingId, status }: UpdateBookingInput,
+  ): Promise<UpdateBookingOutput> {
     try {
       const booking = await this.bookingRepo.findOneBy({ id: bookingId });
-      if (!booking) return createError('Booking id', 'Invalid booking id');
-      if (
-        (booking.status === BookingStatus.NOT_DEPOSITE &&
-          status !== BookingStatus.VEHICLE_TAKEN) ||
-        (booking.status === BookingStatus.VEHICLE_TAKEN &&
-          status !== BookingStatus.FINISHED)
-      )
-        return createError('Booking status', 'Invalid booking status');
-      booking.status = status;
+      if (!booking) return createError('Booking id', 'Đơn thuê không hợp lệ');
+      let canSet = true;
+      if (currentUser.role === UserRole.Normal) {
+        if (booking.userId !== currentUser.id)
+          return createError('user', 'Người dùng không hợp lệ');
+        if (status === BookingStatus.CANCEL) {
+          if (
+            ![BookingStatus.NOT_DEPOSITE, BookingStatus.DEPOSITED].includes(
+              booking.status,
+            )
+          )
+            canSet = false;
+        }
+      } else if (currentUser.role === UserRole.Admin) {
+        if (
+          (booking.status === BookingStatus.NOT_DEPOSITE &&
+            !(status === BookingStatus.DEPOSITED)) ||
+          (booking.status === BookingStatus.DEPOSITED &&
+            !(status === BookingStatus.VEHICLE_TAKEN)) ||
+          (booking.status === BookingStatus.VEHICLE_TAKEN &&
+            !(status === BookingStatus.FINISHED))
+        ) {
+          canSet = false;
+        }
+      }
+      if (canSet) booking.status = status;
+      else return createError('status', 'Trạng thái mới không hợp lệ');
       await this.bookingRepo.save(booking);
       return {
         ok: true,
       };
     } catch (error) {
-      return createError('Server', 'Server error, please try again later');
+      return createError('Server', 'Lỗi xảy ra, thử lại sau');
     }
   }
 
@@ -231,24 +249,25 @@ export class BookingService {
       carType,
       endDate,
       startDate,
+      bookingCode,
+      bookingStatus,
       pagination: { page, resultsPerPage },
     }: GetBookingsByInput,
   ): Promise<GetBookingsByOutput> {
     try {
       let bookings: Booking[], totalResults: number;
-      let findOption: FindManyOptions<Booking>;
-      if (currentUser.role === UserRole.Normal) {
-        findOption = {
-          where: {
-            user: {
-              id: currentUser.id,
-            },
+      let findOption: FindManyOptions<Booking> = {
+        where: {
+          carType: {
+            carType: carType || undefined,
           },
-        };
-      }
-      if (carType) {
-        findOption.where['carType'] = {
-          carType,
+          bookingCode: bookingCode ? ILike(`%${bookingCode}%`) : undefined,
+          status: bookingStatus || undefined,
+        },
+      };
+      if (currentUser.role === UserRole.Normal) {
+        findOption.where['user'] = {
+          id: currentUser.id,
         };
       }
       bookings = await this.bookingRepo.find(findOption);

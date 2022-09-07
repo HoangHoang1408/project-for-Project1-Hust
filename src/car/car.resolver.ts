@@ -6,6 +6,8 @@ import {
   CreateCarOutput,
   GetCarDetailInput,
   GetCarDetailOutput,
+  GetCarsByInput,
+  GetCarsByOutput,
   GetCarTypeInput,
   GetCarTypeOutput,
 } from './dto/car.dto';
@@ -28,5 +30,10 @@ export class CarResolver {
   @Query(() => GetCarTypeOutput)
   getCarType(@Args('input') input: GetCarTypeInput) {
     return this.carService.getCarType(input);
+  }
+
+  @Query(() => GetCarsByOutput)
+  getCarsBy(@Args('input') input: GetCarsByInput) {
+    return this.carService.getCarsBy(input);
   }
 }

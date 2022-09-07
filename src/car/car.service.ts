@@ -9,6 +9,8 @@ import {
   DeleteCarOutput,
   GetCarDetailInput,
   GetCarDetailOutput,
+  GetCarsByInput,
+  GetCarsByOutput,
   GetCarTypeInput,
   GetCarTypeOutput,
   UpdateCarInput,
@@ -26,14 +28,42 @@ export class CarService {
   ) {}
   async createCar(input: CreateCarInput): Promise<CreateCarOutput> {
     try {
-      const car = this.carRepo.create(input);
+      const {
+        carBrand,
+        carType,
+        consumption,
+        engineType,
+        features,
+        images,
+        licensePlate,
+        manufactureYear,
+        name,
+        transmissionType,
+      } = input;
+      const ct = await this.carTypeRepo.findOne({
+        where: {
+          carType,
+        },
+      });
+      if (!ct) return createError('Loại xe', 'Loại xe không tồn tại');
+      const car = this.carRepo.create({
+        carBrand,
+        consumption,
+        engineType,
+        features,
+        images,
+        licensePlate,
+        manufactureYear,
+        name,
+        transmissionType,
+      });
       car.vehicleStatus = {
         booked: false,
         goodCondition: true,
       };
       await this.carRepo.save(car);
     } catch (err) {
-      return createError('Server', 'Server error, please try again later');
+      return createError('Server', 'Lỗi server, thử lại sau');
     }
   }
 
@@ -41,53 +71,52 @@ export class CarService {
     carId,
   }: GetCarDetailInput): Promise<GetCarDetailOutput> {
     try {
+      const car = await this.carRepo.findOne({
+        where: {
+          id: carId,
+        },
+        relations: {
+          carType: true,
+        },
+      });
       return {
         ok: true,
-        car: await this.carRepo.findOneBy({ id: carId }),
+        car,
       };
     } catch {
-      return createError('Server', 'Server error, please try again later');
+      return createError('Server', 'Lỗi server, thử lại sau');
     }
   }
 
-  // async getCarsBy(input: GetCarsByInput): Promise<GetCarsByOutput> {
-  //   try {
-  //     const {
-  //       startDate,
-  //       endDate,
-  //       pagination: { page, resultsPerPage },
-  //     } = input;
-  //     if ((startDate && !endDate) || (!startDate && endDate))
-  //       return createError('Input', 'Invalid input');
-  //     const whereObject = omitBy(input, isNull);
-  //     delete whereObject['startDate'];
-  //     delete whereObject['endDate'];
-  //     delete whereObject['pagination'];
-  //     const cars = await this.carRepo.find({
-  //       where: {
-  //         ...whereObject,
-  //       },
-  //       relations: ['bookings'],
-  //     });
-  //     const start = (page - 1) * resultsPerPage;
-  //     const end = start + resultsPerPage;
-  //     let availableCars = cars.filter((car) =>
-  //       checkVechicleAvailable({ vehicle: car, startDate, endDate }),
-  //     );
-  //     const totalResults = availableCars.length;
-  //     availableCars = availableCars.slice(start, end);
-  //     return {
-  //       ok: true,
-  //       cars: availableCars,
-  //       pagination: {
-  //         totalResults,
-  //         totalPages: Math.floor(totalResults / resultsPerPage) + 1,
-  //       },
-  //     };
-  //   } catch (error) {
-  //     return createError('Server', 'Server error, please try again later');
-  //   }
-  // }
+  async getCarsBy({
+    carType,
+    pagination: { page, resultsPerPage },
+  }: GetCarsByInput): Promise<GetCarsByOutput> {
+    try {
+      const [cars, totalResults] = await this.carRepo.findAndCount({
+        where: {
+          carType: {
+            carType: carType || undefined,
+          },
+        },
+        skip: (page - 1) * resultsPerPage,
+        take: resultsPerPage,
+        relations: {
+          carType: true,
+        },
+      });
+      return {
+        ok: true,
+        cars,
+        pagination: {
+          totalPages: Math.ceil(totalResults / resultsPerPage),
+          totalResults,
+        },
+      };
+    } catch (error) {
+      return createError('Server', 'Lỗi server, thử lại sau');
+    }
+  }
 
   async updateCar(input: UpdateCarInput): Promise<UpdateCarOutput> {
     try {
@@ -102,7 +131,7 @@ export class CarService {
         ok: true,
       };
     } catch (error) {
-      return createError('Server', 'Server error, please try again later');
+      return createError('Server', 'Lỗi server, thử lại sau');
     }
   }
 
@@ -113,7 +142,7 @@ export class CarService {
       await this.carRepo.remove(car);
       return { ok: true };
     } catch (error) {
-      return createError('Server', 'Server error, please try again later');
+      return createError('Server', 'Lỗi server, thử lại sau');
     }
   }
 

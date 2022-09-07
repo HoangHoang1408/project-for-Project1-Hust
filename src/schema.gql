@@ -119,6 +119,7 @@ enum BookingStatus {
   DEPOSITED
   VEHICLE_TAKEN
   FINISHED
+  CANCEL
 }
 
 type User {
@@ -237,6 +238,13 @@ type GetCarDetailOutput {
   car: Car
 }
 
+type GetCarsByOutput {
+  ok: Boolean!
+  error: CustomError
+  cars: [Car!]
+  pagination: PaginationOutput
+}
+
 type GetCarTypeOutput {
   ok: Boolean!
   error: CustomError
@@ -341,6 +349,7 @@ type Query {
   forgotPassword(input: ForgotPasswordInput!): ForgotPasswordOutput!
   getCarDetail(input: GetCarDetailInput!): GetCarDetailOutput!
   getCarType(input: GetCarTypeInput!): GetCarTypeOutput!
+  getCarsBy(input: GetCarsByInput!): GetCarsByOutput!
   checkCarAvailable(input: CheckCarAvailableInput!): CheckCarAvailableOutput!
   getBookingDetail(input: GetBookingDetailInput!): GetBookingDetailOutput!
   getBookingsBy(input: GetBookingsByInput!): GetBookingsByOutput!
@@ -371,6 +380,16 @@ input GetCarTypeInput {
   carType: CarTypeEnum!
 }
 
+input GetCarsByInput {
+  carType: CarTypeEnum
+  pagination: PaginationInput!
+}
+
+input PaginationInput {
+  page: Int = 1
+  resultsPerPage: Int = 10
+}
+
 input CheckCarAvailableInput {
   startDate: DateTime!
   endDate: DateTime!
@@ -383,15 +402,12 @@ input GetBookingDetailInput {
 }
 
 input GetBookingsByInput {
+  bookingCode: String
+  bookingStatus: BookingStatus
   carType: CarTypeEnum
   startDate: DateTime
   endDate: DateTime
   pagination: PaginationInput!
-}
-
-input PaginationInput {
-  page: Int = 1
-  resultsPerPage: Int = 10
 }
 
 type Mutation {
@@ -442,8 +458,7 @@ input CreateCarInput {
   transmissionType: TransmissionType!
   consumption: Float!
   features: [String!]!
-  carType: CarTypeInput!
-  bookings: [BookingInputType!]
+  carType: CarTypeEnum
 }
 
 input CreateBookingInput {

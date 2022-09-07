@@ -56,8 +56,12 @@ export class BookingResolver {
   }
 
   @Mutation(() => UpdateBookingStatusOutput)
-  updateBookingStatus(@Args('input') input: UpdateBookingStatusInput) {
-    return this.bookingService.updateBookingStatus(input);
+  @Roles(['Any'])
+  updateBookingStatus(
+    @CurrentUser() currentUser: User,
+    @Args('input') input: UpdateBookingStatusInput,
+  ) {
+    return this.bookingService.updateBookingStatus(currentUser, input);
   }
 
   @Mutation(() => BookingFeedBackOutput)
