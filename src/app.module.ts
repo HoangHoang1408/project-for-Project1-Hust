@@ -33,6 +33,7 @@ import { UserModule } from './user/user.module';
           : './src/env/.test.env',
       ignoreEnvFile: process.env.NODE_ENV === 'production',
       validationSchema: Joi.object({
+        NODE_ENV: Joi.string().required().valid(['dev', 'production']),
         DATABASE_HOST: Joi.string().required(),
         DATABASE_PORT: Joi.string().required(),
         DATABASE_USERNAME: Joi.string().required(),
@@ -79,12 +80,12 @@ import { UserModule } from './user/user.module';
       driver: ApolloDriver,
       debug: false,
       autoSchemaFile: join(process.cwd(), 'src/schema.gql'),
-      playground: true,
+      playground: process.env.NODE_ENV !== 'production',
       context: ({ req, res }: { req: Request; res: Response }) => {
         return { req, res, [ACCESS_TOKEN]: req.get(ACCESS_TOKEN) };
       },
       cors: {
-        origin: process.env.CLIENT_DOMAIN,
+        origin: '*',
         credentials: true,
       },
     }),
