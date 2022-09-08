@@ -66,7 +66,7 @@ import { UserModule } from './user/user.module';
             database: process.env.DATABASE_NAME,
           }),
       entities: [User, Verification, Car, CarType, Booking],
-      synchronize: process.env.NODE_ENV !== 'prod',
+      synchronize: true,
       logging:
         process.env.NODE_ENV !== 'prod' && process.env.NODE_ENV !== 'test',
       ssl: true,
