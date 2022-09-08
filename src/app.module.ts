@@ -31,7 +31,7 @@ import { UserModule } from './user/user.module';
         process.env.NODE_ENV === 'dev'
           ? './src/env/.dev.env'
           : './src/env/.test.env',
-      ignoreEnvFile: process.env.NODE_ENV === 'prod',
+      ignoreEnvFile: process.env.NODE_ENV === 'production',
       validationSchema: Joi.object({
         DATABASE_HOST: Joi.string().required(),
         DATABASE_PORT: Joi.string().required(),
@@ -67,8 +67,6 @@ import { UserModule } from './user/user.module';
           }),
       entities: [User, Verification, Car, CarType, Booking],
       synchronize: true,
-      logging:
-        process.env.NODE_ENV !== 'prod' && process.env.NODE_ENV !== 'test',
       ssl: true,
       extra: {
         ssl: {
