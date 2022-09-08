@@ -396,6 +396,7 @@ export class BookingService {
       return createError('Server', 'Lỗi server, thử lại sau');
     }
   }
+
   getDatesInRange(startDate: Date, endDate: Date) {
     const date = new Date(startDate.getTime());
     date.setDate(date.getDate());
