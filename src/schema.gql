@@ -58,7 +58,7 @@ type Car {
   name: String!
   rating: Float!
   engineType: EngineType!
-  manufactureYear: Float!
+  manufactureYear: Int!
   images: [StoredFile!]
   licensePlate: String!
   vehicleStatus: VehicleStatus!
@@ -227,6 +227,23 @@ type CheckCarAvailableOutput {
   available: Boolean
 }
 
+type DayData {
+  status: BookingStatus
+  day: DateTime!
+}
+
+type TableRowData {
+  car: Car!
+  dayDatas: [DayData!]!
+  rowSumary: String!
+}
+
+type ForecastTableOutput {
+  ok: Boolean!
+  error: CustomError
+  tableData: [TableRowData!]
+}
+
 type CreateCarOutput {
   ok: Boolean!
   error: CustomError
@@ -243,6 +260,11 @@ type GetCarsByOutput {
   error: CustomError
   cars: [Car!]
   pagination: PaginationOutput
+}
+
+type UpdateCarOutput {
+  ok: Boolean!
+  error: CustomError
 }
 
 type GetCarTypeOutput {
@@ -265,6 +287,13 @@ type GetDetailUserOutput {
 type UpdateUserOutput {
   ok: Boolean!
   error: CustomError
+}
+
+type GetUserByOutput {
+  ok: Boolean!
+  error: CustomError
+  users: [User!]
+  pagination: PaginationOutput
 }
 
 input StoredFileInputType {
@@ -293,7 +322,7 @@ input CarInputType {
   name: String!
   rating: Float!
   engineType: EngineType!
-  manufactureYear: Float!
+  manufactureYear: Int!
   images: [StoredFileInputType!]
   licensePlate: String!
   vehicleStatus: VehicleStatusInputType!
@@ -343,6 +372,7 @@ input VehicleStatusInputType {
 
 type Query {
   getDetailUser: GetDetailUserOutput!
+  getUserBy(input: GetUserByInput!): GetUserByOutput!
   login(input: LoginInput!): LoginOutPut!
   newAccessToken(input: NewAccessTokenInput!): NewAccessTokenOutput!
   verifyEmail(input: VerifyEmailInput!): VerifyEmailOutput!
@@ -353,6 +383,19 @@ type Query {
   checkCarAvailable(input: CheckCarAvailableInput!): CheckCarAvailableOutput!
   getBookingDetail(input: GetBookingDetailInput!): GetBookingDetailOutput!
   getBookingsBy(input: GetBookingsByInput!): GetBookingsByOutput!
+  forecastTable(input: ForecastTableInput!): ForecastTableOutput!
+}
+
+input GetUserByInput {
+  role: UserRole
+  name: String
+  phoneNumber: String
+  pagination: PaginationInput!
+}
+
+input PaginationInput {
+  page: Int = 1
+  resultsPerPage: Int = 10
 }
 
 input LoginInput {
@@ -382,12 +425,10 @@ input GetCarTypeInput {
 
 input GetCarsByInput {
   carType: CarTypeEnum
+  carBrand: CarBrand
+  name: String
+  licensePlate: String
   pagination: PaginationInput!
-}
-
-input PaginationInput {
-  page: Int = 1
-  resultsPerPage: Int = 10
 }
 
 input CheckCarAvailableInput {
@@ -410,12 +451,19 @@ input GetBookingsByInput {
   pagination: PaginationInput!
 }
 
+input ForecastTableInput {
+  carType: CarTypeEnum!
+  startDate: DateTime!
+  endDate: DateTime!
+}
+
 type Mutation {
   updateUser(input: UpdateUserInput!): UpdateUserOutput!
   changePassword(input: ChangePasswordInput!): ChangePasswordOutput!
   signup(input: SignUpInput!): SignUpOutPut!
   verifyForgotPassword(input: VerifyForgotPasswordInput!): VerifyForgotPasswordOutput!
   createCar(input: CreateCarInput!): CreateCarOutput!
+  updateCar(input: UpdateCarInput!): UpdateCarOutput!
   createBooking(input: CreateBookingInput!): CreateBookingOutput!
   updateBookingStatus(input: UpdateBookingStatusInput!): UpdateBookingStatusOutput!
   bookingFeedback(input: BookingFeedBackInput!): BookingFeedBackOutput!
@@ -451,7 +499,7 @@ input VerifyForgotPasswordInput {
 input CreateCarInput {
   name: String!
   engineType: EngineType!
-  manufactureYear: Float!
+  manufactureYear: Int!
   images: [StoredFileInputType!]
   licensePlate: String!
   carBrand: CarBrand!
@@ -459,6 +507,21 @@ input CreateCarInput {
   consumption: Float!
   features: [String!]!
   carType: CarTypeEnum
+}
+
+input UpdateCarInput {
+  name: String
+  engineType: EngineType
+  manufactureYear: Int
+  images: [StoredFileInputType!]
+  licensePlate: String
+  carBrand: CarBrand
+  transmissionType: TransmissionType
+  consumption: Float
+  features: [String!]
+  carType: CarTypeEnum
+  carId: ID!
+  vehicleStatus: VehicleStatusInputType
 }
 
 input CreateBookingInput {

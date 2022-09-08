@@ -10,12 +10,13 @@ import {
   GetCarsByOutput,
   GetCarTypeInput,
   GetCarTypeOutput,
+  UpdateCarInput,
+  UpdateCarOutput,
 } from './dto/car.dto';
 
 @Resolver()
 export class CarResolver {
   constructor(private readonly carService: CarService) {}
-
   @Roles(['Admin'])
   @Mutation(() => CreateCarOutput)
   createCar(@Args('input') input: CreateCarInput) {
@@ -35,5 +36,11 @@ export class CarResolver {
   @Query(() => GetCarsByOutput)
   getCarsBy(@Args('input') input: GetCarsByInput) {
     return this.carService.getCarsBy(input);
+  }
+
+  @Roles(['Admin'])
+  @Mutation(() => UpdateCarOutput)
+  updateCar(@Args('input') input: UpdateCarInput) {
+    return this.carService.updateCar(input);
   }
 }

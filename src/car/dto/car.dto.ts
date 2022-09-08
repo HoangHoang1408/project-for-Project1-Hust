@@ -12,7 +12,7 @@ import {
   PaginationInput,
   PaginationOutput,
 } from 'src/common/dto/output.dto';
-import { Car, VehicleStatus } from '../entities/car.entity';
+import { Car, CarBrand, VehicleStatus } from '../entities/car.entity';
 import { CarType, CarTypeEnum } from '../entities/carType.entity';
 
 @InputType()
@@ -50,6 +50,15 @@ export class GetCarDetailOutput extends CoreOutput {
 export class GetCarsByInput {
   @Field(() => CarTypeEnum, { nullable: true })
   carType?: CarTypeEnum;
+
+  @Field(() => CarBrand, { nullable: true })
+  carBrand?: CarBrand;
+
+  @Field({ nullable: true })
+  name?: string;
+
+  @Field({ nullable: true })
+  licensePlate?: string;
 
   @Field(() => PaginationInput)
   @ValidateNested()

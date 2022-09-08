@@ -1,6 +1,7 @@
 import {
   Field,
   InputType,
+  Int,
   ObjectType,
   registerEnumType,
 } from '@nestjs/graphql';
@@ -70,7 +71,7 @@ export class Car extends CoreEntity {
   })
   engineType: EngineType;
 
-  @Field()
+  @Field(() => Int)
   @Column()
   manufactureYear: number;
 

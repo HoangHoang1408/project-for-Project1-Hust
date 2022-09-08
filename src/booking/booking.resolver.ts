@@ -16,6 +16,10 @@ import {
   UpdateBookingStatusInput,
   UpdateBookingStatusOutput,
 } from './dto/booking.dto';
+import {
+  ForecastTableInput,
+  ForecastTableOutput,
+} from './dto/forecastTable.dto';
 
 import { Booking } from './entities/booking.entity';
 
@@ -71,5 +75,11 @@ export class BookingResolver {
     @Args('input') input: BookingFeedBackInput,
   ) {
     return this.bookingService.bookingFeedBack(currentUser, input);
+  }
+
+  @Roles(['Admin'])
+  @Query(() => ForecastTableOutput)
+  forecastTable(@Args('input') input: ForecastTableInput) {
+    return this.bookingService.forecastTable(input);
   }
 }

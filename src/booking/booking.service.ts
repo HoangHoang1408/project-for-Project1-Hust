@@ -20,6 +20,12 @@ import {
   UpdateBookingOutput,
 } from './dto';
 import { BookingFeedBackInput, BookingFeedBackOutput } from './dto/booking.dto';
+import {
+  DayData,
+  ForecastTableInput,
+  ForecastTableOutput,
+  TableRowData,
+} from './dto/forecastTable.dto';
 import { Booking, BookingStatus } from './entities/booking.entity';
 
 @Injectable()
@@ -323,5 +329,81 @@ export class BookingService {
     } catch (error) {
       return createError('Server', 'Lỗi server, thử lại sau');
     }
+  }
+
+  async forecastTable({
+    carType,
+    endDate,
+    startDate,
+  }: ForecastTableInput): Promise<ForecastTableOutput> {
+    try {
+      let bookings = await this.bookingRepo.find({
+        where: {
+          carType: {
+            carType,
+          },
+          status: In([BookingStatus.DEPOSITED, BookingStatus.VEHICLE_TAKEN]),
+        },
+        relations: {
+          cars: true,
+        },
+      });
+      bookings = bookings.filter(
+        (b) =>
+          !(new Date(b.startDate) > endDate) || new Date(b.endDate) < startDate,
+      );
+      const cars = await this.carRepo.find({
+        where: {
+          carType: {
+            carType,
+          },
+        },
+        relations: {
+          carType: true,
+        },
+      });
+      const tableData = cars.map<TableRowData>((car) => ({
+        car,
+        dayDatas: this.getDatesInRange(startDate, endDate).map<DayData>(
+          (date) => ({
+            day: date,
+          }),
+        ),
+        rowSumary: '',
+      }));
+      bookings.forEach((booking) => {
+        booking.cars.forEach((c) => {
+          const rowData = tableData.find((d) => d.car.id === c.id);
+          rowData.dayDatas
+            .filter(
+              (dd) => dd.day >= booking.startDate && dd.day <= booking.endDate,
+            )
+            .forEach((dd) => (dd.status = booking.status));
+        });
+      });
+      tableData.forEach((r) => {
+        let count = 0;
+        r.dayDatas.forEach((d) => {
+          if (d.status) count += 1;
+        });
+        r.rowSumary = `${count}/${r.dayDatas.length}`;
+      });
+      return {
+        ok: true,
+        tableData,
+      };
+    } catch (error) {
+      return createError('Server', 'Lỗi server, thử lại sau');
+    }
+  }
+  getDatesInRange(startDate: Date, endDate: Date) {
+    const date = new Date(startDate.getTime());
+    date.setDate(date.getDate());
+    const dates: Date[] = [];
+    while (date <= endDate) {
+      dates.push(new Date(date));
+      date.setDate(date.getDate() + 1);
+    }
+    return dates;
   }
 }

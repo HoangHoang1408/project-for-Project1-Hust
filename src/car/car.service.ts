@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { createError } from 'src/common/utils';
-import { Repository } from 'typeorm';
+import { ILike, Repository } from 'typeorm';
 import {
   CreateCarInput,
   CreateCarOutput,
@@ -40,6 +40,17 @@ export class CarService {
         name,
         transmissionType,
       } = input;
+      const tempCar = await this.carRepo.findOne({
+        where: {
+          engineType,
+          manufactureYear,
+          name,
+          licensePlate,
+        },
+      });
+      if (tempCar) {
+        return createError('Input', 'Xe đã tồn tại');
+      }
       const ct = await this.carTypeRepo.findOne({
         where: {
           carType,
@@ -56,12 +67,16 @@ export class CarService {
         manufactureYear,
         name,
         transmissionType,
+        carType: ct,
       });
       car.vehicleStatus = {
         booked: false,
         goodCondition: true,
       };
       await this.carRepo.save(car);
+      return {
+        ok: true,
+      };
     } catch (err) {
       return createError('Server', 'Lỗi server, thử lại sau');
     }
@@ -90,6 +105,9 @@ export class CarService {
 
   async getCarsBy({
     carType,
+    carBrand,
+    licensePlate,
+    name,
     pagination: { page, resultsPerPage },
   }: GetCarsByInput): Promise<GetCarsByOutput> {
     try {
@@ -98,6 +116,9 @@ export class CarService {
           carType: {
             carType: carType || undefined,
           },
+          carBrand: carBrand || undefined,
+          licensePlate: licensePlate ? ILike(`%${licensePlate}%`) : undefined,
+          name: name ? ILike(`%${name}%`) : undefined,
         },
         skip: (page - 1) * resultsPerPage,
         take: resultsPerPage,
@@ -120,10 +141,19 @@ export class CarService {
 
   async updateCar(input: UpdateCarInput): Promise<UpdateCarOutput> {
     try {
-      let car = await this.carRepo.findBy({ id: input.carId });
+      let car = await this.carRepo.findOneBy({ id: input.carId });
       if (!car) return createError('Car id', 'Invalid car id');
+      let carType: CarType | undefined = undefined;
+      if (input.carType) {
+        carType = await this.carTypeRepo.findOneBy({
+          carType: input.carType,
+        });
+      }
+      delete input.carType;
       car = {
         ...car,
+        // @ts-ignore
+        carType,
         ...input,
       };
       await this.carRepo.save(car);
@@ -131,6 +161,7 @@ export class CarService {
         ok: true,
       };
     } catch (error) {
+      console.log(error);
       return createError('Server', 'Lỗi server, thử lại sau');
     }
   }

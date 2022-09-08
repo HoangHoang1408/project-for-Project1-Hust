@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { FirebaseService } from 'src/firebase/firebase.service';
+import { DeleteFileInput, DeleteFilesInput } from './dto/UploadFile.dto';
 
 @Injectable()
 export class UploadService {
@@ -9,5 +10,12 @@ export class UploadService {
   }
   uploadFiles(files: Express.Multer.File[], storagePath: string) {
     return this.firebaseService.uploadFiles(files, storagePath);
+  }
+
+  deleteFile(input: DeleteFileInput) {
+    return this.firebaseService.deleteFile(input.storagePath);
+  }
+  deleteFiles(input: DeleteFilesInput) {
+    return this.firebaseService.deleteFiles(input.storagePaths);
   }
 }
