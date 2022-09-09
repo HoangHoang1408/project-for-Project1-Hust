@@ -23,8 +23,8 @@ export class DataService {
     @InjectRepository(CarType)
     private readonly carTypeRepo: Repository<CarType>,
   ) {
+    this.insertCarTypes();
     // this.insertCarData(15);
-    // this.insertCarTypes()
   }
   async insertCarData(numOfCars: number) {
     const carBrands = Object.values(CarBrand);
@@ -69,20 +69,17 @@ export class DataService {
   }
   async insertCarTypes() {
     const carTypes = Object.values(CarTypeEnum);
-    const payments = Object.values(Payment);
     const objs = carTypes.map((ct) =>
       this.carTypeRepo.create({
         carType: ct,
-        acceptedPayment: sampleSize(payments, 2),
-        additionalDistancePrice: sample(range(5, 10)),
-        maxDistance: sample(range(200, 1000, 100)),
-        price: sample(range(500, 1000, 100)),
+        acceptedPayment: [Payment.BANK_TRANSFER],
+        additionalDistancePrice: sample(range(5, 10)) * 1000,
+        maxDistance: sample(range(200, 800, 100)),
+        price: sample(range(300, 800, 100)) * 1000,
         procedures: {
           verificationPaper: ['CMND', 'Bằng lái xe'],
           mortgatePaper: ['Sổ hộ khẩu'],
-          mortgateProperty: [
-            'Tiền 15 triệu hoặc xe máy + đăng kí xe giá trị tương đương',
-          ],
+          mortgateProperty: [],
         },
       }),
     );
