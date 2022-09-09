@@ -45,14 +45,21 @@ export class BookingService {
           carType: carTypeName,
         },
         relations: {
-          bookings: {
-            cars: true,
-          },
           cars: true,
         },
       });
       if (!carType) return false;
-      const bookings = carType.bookings;
+      let bookings = await this.bookingRepo.find({
+        where: {
+          carType: {
+            carType: carTypeName,
+          },
+          status: In([BookingStatus.DEPOSITED, BookingStatus.VEHICLE_TAKEN]),
+        },
+        relations: {
+          cars: true,
+        },
+      });
       const cars = carType.cars;
       const totalCar = cars.length;
       if (+quantity > totalCar) return false;
