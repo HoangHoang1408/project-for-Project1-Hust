@@ -63,7 +63,7 @@ export class BookingService {
         )
           continue;
         booking.cars.forEach((c) => bookedIds.add(c.id));
-        if (bookedIds.size + +quantity > totalCar) false;
+        if (bookedIds.size + +quantity > totalCar) return false;
       }
       return true;
     } catch (error) {
