@@ -56,6 +56,7 @@ export class BookingService {
       const cars = carType.cars;
       const totalCar = cars.length;
       if (+quantity > totalCar) return false;
+      console.log(carType);
       const bookedIds = new Set<number>();
       for (const booking of bookings) {
         if (

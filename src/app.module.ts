@@ -85,7 +85,11 @@ import { UserModule } from './user/user.module';
         return { req, res, [ACCESS_TOKEN]: req.get(ACCESS_TOKEN) };
       },
       cors: {
-        origin: [process.env.CLIENT_DOMAIN, process.env.SERVER_DOMAIN],
+        origin: [
+          process.env.CLIENT_DOMAIN,
+          process.env.SERVER_DOMAIN,
+          process.env.DEV_DOMAIN,
+        ],
         credentials: true,
       },
     }),
