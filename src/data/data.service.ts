@@ -8,6 +8,7 @@ import {
   TransmissionType,
 } from 'src/car/entities/car.entity';
 import { CarType, CarTypeEnum, Payment } from 'src/car/entities/carType.entity';
+import { User, UserRole } from 'src/user/entities/user.entity';
 import { Repository } from 'typeorm';
 
 @Injectable()
@@ -20,11 +21,13 @@ export class DataService {
     .flat();
   constructor(
     @InjectRepository(Car) private readonly carRepo: Repository<Car>,
+    @InjectRepository(User) private readonly userRepo: Repository<User>,
     @InjectRepository(CarType)
     private readonly carTypeRepo: Repository<CarType>,
   ) {
-    this.insertCarTypes();
-    // this.insertCarData(15);
+    if (process.env.INSERT_CARTYPE) this.insertCarTypes();
+    if (process.env.INSERT_CARS) this.insertCarData(30);
+    if (process.env.INSERT_ADMIN) this.insertAdmin(5);
   }
   async insertCarData(numOfCars: number) {
     const carBrands = Object.values(CarBrand);
@@ -49,7 +52,7 @@ export class DataService {
     const createCarRequests = range(numOfCars).map(async () => {
       const cb = sample(carBrands);
       const tempCar: Partial<Car> = {
-        name: cb + ' ' + sampleSize(this.alphabet, 10).join(''),
+        name: cb + ' ' + sampleSize(this.alphabet, 2).join(''),
         carBrand: cb,
         engineType: sample(engineTypes),
         manufactureYear: sample(manufactureYears),
@@ -60,7 +63,11 @@ export class DataService {
           booked: false,
           goodCondition: true,
         },
-        licensePlate: sampleSize(this.alphabet, 12).join(''),
+        licensePlate:
+          '30A-' +
+          sampleSize(range(0, 10).join(''), 3).join('') +
+          '.' +
+          sampleSize(range(0, 10).join(''), 2).join(''),
         carType: sample(carTypes),
       };
       await this.carRepo.save(this.carRepo.create(tempCar));
@@ -84,5 +91,22 @@ export class DataService {
       }),
     );
     await this.carTypeRepo.save(objs);
+  }
+  async insertAdmin(num: number) {
+    const temp = range(num).map(() =>
+      this.userRepo.save(
+        this.userRepo.create({
+          name: 'admin',
+          email:
+            'admin' +
+            sampleSize(range(0, 10).join(''), 5).join('') +
+            '@gmail.com',
+          password: 'password',
+          role: UserRole.Admin,
+          verified: true,
+        }),
+      ),
+    );
+    await Promise.all(temp);
   }
 }
