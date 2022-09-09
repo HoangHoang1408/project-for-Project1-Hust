@@ -68,7 +68,7 @@ import { UserModule } from './user/user.module';
           }),
       entities: [User, Verification, Car, CarType, Booking],
       synchronize: true,
-      ...(process.env.NODE_ENV === 'prod'
+      ...(process.env.NODE_ENV === 'production'
         ? {
             ssl: true,
             extra: {
