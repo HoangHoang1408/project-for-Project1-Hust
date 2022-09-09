@@ -55,6 +55,7 @@ export class BookingService {
       const bookings = carType.bookings;
       const cars = carType.cars;
       const totalCar = cars.length;
+      if (+quantity > totalCar) return false;
       const bookedIds = new Set<number>();
       for (const booking of bookings) {
         if (
@@ -141,6 +142,8 @@ export class BookingService {
       if (!bookings) bookings = [];
       const cars = carType.cars;
       const totalCar = cars.length;
+      if (+quantity > totalCar)
+        return createError('Số lượng xe', 'Hiện không còn đủ xe để đặt');
       const bookedIds = new Set<number>();
       for (const booking of bookings) {
         if (
@@ -149,7 +152,7 @@ export class BookingService {
         )
           continue;
         booking.cars.forEach((c) => bookedIds.add(c.id));
-        if (bookedIds.size + quantity > totalCar)
+        if (bookedIds.size + +quantity > totalCar)
           return createError('Số lượng xe', 'Hiện không còn đủ xe để đặt');
       }
       const availableCars = cars.filter((c) => !bookedIds.has(c.id));
