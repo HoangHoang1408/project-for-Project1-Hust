@@ -68,17 +68,13 @@ import { UserModule } from './user/user.module';
           }),
       entities: [User, Verification, Car, CarType, Booking],
       synchronize: true,
-      ...(process.env.NODE_ENV === 'production'
-        ? {
-            ssl: true,
-            extra: {
-              ssl: {
-                require: true,
-                rejectUnauthorized: false,
-              },
-            },
-          }
-        : {}),
+      ssl: true,
+      extra: {
+        ssl: {
+          require: true,
+          rejectUnauthorized: false,
+        },
+      },
     }),
     GraphQLModule.forRoot<ApolloDriverConfig>({
       driver: ApolloDriver,
