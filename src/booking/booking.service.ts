@@ -56,7 +56,6 @@ export class BookingService {
       const cars = carType.cars;
       const totalCar = cars.length;
       if (+quantity > totalCar) return false;
-      console.log(carType);
       const bookedIds = new Set<number>();
       for (const booking of bookings) {
         if (
@@ -82,7 +81,7 @@ export class BookingService {
           'Date input',
           'Thời gian bắt đầu và kết thúc không hợp lệ',
         );
-      if (!this.checkCar(input)) {
+      if (!(await this.checkCar(input))) {
         return {
           ok: true,
           available: false,
