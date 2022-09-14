@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { range, sample, sampleSize } from 'lodash';
+import { Booking } from 'src/booking/entities/booking.entity';
 import {
   Car,
   CarBrand,
@@ -116,15 +117,18 @@ export class DataService {
   constructor(
     @InjectRepository(Car) private readonly carRepo: Repository<Car>,
     @InjectRepository(User) private readonly userRepo: Repository<User>,
+    @InjectRepository(Booking)
+    private readonly bookingRepo: Repository<Booking>,
     @InjectRepository(Service)
     private readonly serviceRepo: Repository<Service>,
     @InjectRepository(CarType)
     private readonly carTypeRepo: Repository<CarType>,
   ) {
     if (process.env.INSERT_CARTYPE) this.insertCarTypes();
-    if (process.env.INSERT_CARS) this.insertCarData(60);
-    if (process.env.INSERT_ADMIN) this.insertAdmin(5);
+    if (process.env.INSERT_CARS) this.insertCarData(50);
+    if (process.env.INSERT_ADMIN) this.insertAdmin(3);
     if (process.env.INSERT_SERVICE) this.insertServices();
+    if (process.env.RESET_DATABASE) this.reset();
   }
   async insertCarData(numOfCars: number) {
     const carBrands = Object.values(CarBrand);
@@ -206,6 +210,15 @@ export class DataService {
       ),
     );
     await Promise.all(temp);
+    await this.userRepo.save(
+      this.userRepo.create({
+        name: 'admin',
+        email: 'admin' + '@gmail.com',
+        password: 'password',
+        role: UserRole.Admin,
+        verified: true,
+      }),
+    );
   }
   async insertServices() {
     await this.serviceRepo.save(
@@ -217,5 +230,15 @@ export class DataService {
         }),
       ),
     );
+  }
+  async reset() {
+    const booking = await this.bookingRepo.find();
+    await this.bookingRepo.remove(booking);
+    const car = await this.carRepo.find();
+    await this.carRepo.remove(car);
+    const carType = await this.carTypeRepo.find();
+    await this.carTypeRepo.remove(carType);
+    const user = await this.userRepo.find();
+    await this.userRepo.remove(user);
   }
 }
