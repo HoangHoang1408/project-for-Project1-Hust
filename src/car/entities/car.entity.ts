@@ -110,6 +110,6 @@ export class Car extends CoreEntity {
   carType: CarType;
 
   @Field(() => [Booking], { nullable: true })
-  @ManyToMany(() => Booking, { nullable: true })
+  @ManyToMany(() => Booking, (booking) => booking.cars, { nullable: true })
   bookings?: Booking[];
 }

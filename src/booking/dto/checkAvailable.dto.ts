@@ -1,5 +1,4 @@
 import { Field, InputType, ObjectType, PickType } from '@nestjs/graphql';
-import { IsNumberString } from 'class-validator';
 import { CarTypeEnum } from 'src/car/entities/carType.entity';
 import { CoreOutput } from 'src/common/dto/output.dto';
 import { Booking } from '../entities/booking.entity';
@@ -13,7 +12,7 @@ export class CheckCarAvailableInput extends PickType(Booking, [
   carType: CarTypeEnum;
 
   @Field(() => Number)
-  quantity: string;
+  quantity: number;
 }
 
 @ObjectType()

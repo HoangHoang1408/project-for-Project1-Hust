@@ -19,6 +19,8 @@ import { ACCESS_TOKEN } from './common/constants/constants';
 import { DataModule } from './data/data.module';
 import { EmailModule } from './email/email.module';
 import { FirebaseModule } from './firebase/firebase.module';
+import { Service } from './service/entities/service.entity';
+import { ServiceModule } from './service/service.module';
 import { UploadModule } from './upload/upload.module';
 import { User } from './user/entities/user.entity';
 import { UserModule } from './user/user.module';
@@ -66,7 +68,7 @@ import { UserModule } from './user/user.module';
             password: process.env.DATABASE_PASSWORD,
             database: process.env.DATABASE_NAME,
           }),
-      entities: [User, Verification, Car, CarType, Booking],
+      entities: [User, Verification, Car, CarType, Booking, Service],
       synchronize: true,
       ...(process.env.NODE_ENV === 'production'
         ? {
@@ -117,6 +119,7 @@ import { UserModule } from './user/user.module';
     CarModule,
     DataModule,
     BookingModule,
+    ServiceModule,
   ],
   controllers: [AppController],
   providers: [AppService],

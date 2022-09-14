@@ -5,6 +5,7 @@ import { sampleSize } from 'lodash';
 import { Car } from 'src/car/entities/car.entity';
 import { CarType } from 'src/car/entities/carType.entity';
 import { createError } from 'src/common/utils';
+import { Service } from 'src/service/entities/service.entity';
 import { User, UserRole } from 'src/user/entities/user.entity';
 import { FindManyOptions, ILike, In, Repository } from 'typeorm';
 import {
@@ -36,6 +37,8 @@ export class BookingService {
     @InjectRepository(Car) private readonly carRepo: Repository<Car>,
     @InjectRepository(CarType)
     private readonly carTypeRepo: Repository<CarType>,
+    @InjectRepository(Service)
+    private readonly serviceRepo: Repository<Service>,
   ) {}
   private async checkCar(input: CheckCarAvailableInput) {
     const { carType: carTypeName, endDate, quantity, startDate } = input;
@@ -88,6 +91,14 @@ export class BookingService {
           'Date input',
           'Thời gian bắt đầu và kết thúc không hợp lệ',
         );
+      if (
+        startDate.getDate() < new Date().getDate() ||
+        endDate.getDate() < new Date().getDate()
+      )
+        return createError(
+          'Date input',
+          'Không được đặt xe trước thời điểm hiện tại',
+        );
       if (!(await this.checkCar(input))) {
         return {
           ok: true,
@@ -117,6 +128,7 @@ export class BookingService {
       startDate,
       customerName,
       customerPhone,
+      serviceIds,
     } = input;
     try {
       if (startDate >= endDate)
@@ -163,6 +175,15 @@ export class BookingService {
           return createError('Số lượng xe', 'Hiện không còn đủ xe để đặt');
       }
       const availableCars = cars.filter((c) => !bookedIds.has(c.id));
+      let services: Service[] = [];
+      if (serviceIds && serviceIds.length > 0)
+        try {
+          services = await Promise.all(
+            serviceIds.map((id) => this.serviceRepo.findOneBy({ id: +id })),
+          );
+        } catch (error) {
+          return createError('services', 'Dịch vụ không hợp lệ');
+        }
       const bookingCode = (
         randomBytes(4).toString('hex') + Date.now().toString(18)
       ).toUpperCase();
@@ -178,10 +199,20 @@ export class BookingService {
           note,
           payment,
           status: BookingStatus.NOT_DEPOSITE,
-          totalPrice: carType.price * quantity,
+          totalPrice: this.calcTotalPrice(
+            startDate,
+            endDate,
+            carType.price,
+            quantity,
+            services.map(({ servicePrice, perDay }) => ({
+              perDay,
+              price: servicePrice,
+            })),
+          ),
           quantity,
           customerName,
           customerPhone,
+          services,
         }),
       );
       return {
@@ -189,6 +220,7 @@ export class BookingService {
         bookingCode,
       };
     } catch (error) {
+      console.log(error);
       return createError('Server', 'Server error, please try again later');
     }
   }
@@ -198,8 +230,30 @@ export class BookingService {
     { bookingId, status }: UpdateBookingInput,
   ): Promise<UpdateBookingOutput> {
     try {
-      const booking = await this.bookingRepo.findOneBy({ id: bookingId });
+      const booking = await this.bookingRepo.findOne({
+        where: { id: bookingId },
+        relations: {
+          carType: true,
+        },
+      });
       if (!booking) return createError('Booking id', 'Đơn thuê không hợp lệ');
+      if (
+        currentUser.role === UserRole.Admin &&
+        status === BookingStatus.DEPOSITED &&
+        booking.status === BookingStatus.NOT_DEPOSITE
+      ) {
+        const valid = await this.checkCar({
+          carType: booking.carType.carType,
+          endDate: booking.endDate,
+          startDate: booking.startDate,
+          quantity: booking.quantity,
+        });
+        if (!valid)
+          return createError(
+            '',
+            'Các xe đã được đặt trước, không thể tiền hành đơn thuê này',
+          );
+      }
       let canSet = true;
       if (currentUser.role === UserRole.Normal) {
         if (booking.userId !== currentUser.id)
@@ -242,7 +296,10 @@ export class BookingService {
     try {
       const booking = await this.bookingRepo.findOne({
         where: { id: bookingId },
-        relations: ['user'],
+        relations: {
+          user: true,
+          services: true,
+        },
       });
       if (!booking) return createError('Booking id', 'Đơn thuê không tồn tại');
       if (
@@ -406,7 +463,6 @@ export class BookingService {
       return createError('Server', 'Lỗi server, thử lại sau');
     }
   }
-
   getDatesInRange(startDate: Date, endDate: Date) {
     const date = new Date(startDate.getTime());
     date.setDate(date.getDate());
@@ -416,5 +472,32 @@ export class BookingService {
       date.setDate(date.getDate() + 1);
     }
     return dates;
+  }
+  countRentingDay = (startDate: Date, endDate: Date) => {
+    const start = startDate.getTime();
+    const end = endDate.getTime();
+    return Math.round(((end - start) * 2) / 86400000) / 2;
+  };
+  calcServicePrice = (
+    numOfDays: number,
+    services: { price: number; perDay: boolean }[],
+  ) => {
+    return services.reduce(
+      (pre, c) => pre + c.price * (c.perDay ? numOfDays : 1),
+      0,
+    );
+  };
+  calcTotalPrice(
+    startDate: Date,
+    endDate: Date,
+    carPrice: number,
+    quantity: number,
+    services: { price: number; perDay: boolean }[],
+  ) {
+    const rentingDay = this.countRentingDay(startDate, endDate);
+    return (
+      (this.calcServicePrice(rentingDay, services) + carPrice * rentingDay) *
+      quantity
+    );
   }
 }

@@ -36,6 +36,8 @@ enum CarTypeEnum {
   SEAT4
   SEAT5
   SEAT7
+  SEAT12
+  SEAT16
   PICKUP_TRUCK
   LUXURY_CAR
 }
@@ -92,6 +94,16 @@ enum TransmissionType {
   AUTOMATIC_TRANSMISSION
 }
 
+type Service {
+  id: ID!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  serviceName: String!
+  servicePrice: Float!
+  description: String!
+  perDay: Boolean!
+}
+
 type Booking {
   id: ID!
   createdAt: DateTime!
@@ -112,6 +124,7 @@ type Booking {
   customerName: String!
   customerPhone: String!
   note: String
+  services: [Service!]
 }
 
 enum BookingStatus {
@@ -271,6 +284,47 @@ type GetCarTypeOutput {
   ok: Boolean!
   error: CustomError
   carType: CarType
+  numOfCars: Float
+}
+
+type GetCarTypesOutput {
+  ok: Boolean!
+  error: CustomError
+  carTypes: [CarType!]
+  pagination: PaginationOutput
+}
+
+type UpdateCarTypeOutput {
+  ok: Boolean!
+  error: CustomError
+}
+
+type CreateServiceOutput {
+  ok: Boolean!
+  error: CustomError
+}
+
+type GetServiceOutput {
+  ok: Boolean!
+  error: CustomError
+  service: Service
+}
+
+type UpdateServiceOutput {
+  ok: Boolean!
+  error: CustomError
+}
+
+type GetServicesByOutput {
+  ok: Boolean!
+  error: CustomError
+  pagination: PaginationOutput
+  services: [Service!]
+}
+
+type DeleteServiceOutput {
+  ok: Boolean!
+  error: CustomError
 }
 
 type ChangePasswordOutput {
@@ -351,6 +405,7 @@ input BookingInputType {
   customerName: String!
   customerPhone: String!
   note: String
+  services: [ServiceInputType!]
 }
 
 input UserInputType {
@@ -363,6 +418,13 @@ input UserInputType {
   phoneNumber: String
   avatar: StoredFileInputType
   bookings: [BookingInputType!] = {}
+}
+
+input ServiceInputType {
+  serviceName: String!
+  servicePrice: Float!
+  description: String!
+  perDay: Boolean!
 }
 
 input VehicleStatusInputType {
@@ -380,10 +442,13 @@ type Query {
   getCarDetail(input: GetCarDetailInput!): GetCarDetailOutput!
   getCarType(input: GetCarTypeInput!): GetCarTypeOutput!
   getCarsBy(input: GetCarsByInput!): GetCarsByOutput!
+  getCarTypes(input: GetCarTypesInput!): GetCarTypesOutput!
   checkCarAvailable(input: CheckCarAvailableInput!): CheckCarAvailableOutput!
   getBookingDetail(input: GetBookingDetailInput!): GetBookingDetailOutput!
   getBookingsBy(input: GetBookingsByInput!): GetBookingsByOutput!
   forecastTable(input: ForecastTableInput!): ForecastTableOutput!
+  getService(input: GetServiceInput!): GetServiceOutput!
+  getServices(input: GetServicesByInput!): GetServicesByOutput!
 }
 
 input GetUserByInput {
@@ -431,6 +496,10 @@ input GetCarsByInput {
   pagination: PaginationInput!
 }
 
+input GetCarTypesInput {
+  pagination: PaginationInput!
+}
+
 input CheckCarAvailableInput {
   startDate: DateTime!
   endDate: DateTime!
@@ -457,6 +526,15 @@ input ForecastTableInput {
   endDate: DateTime!
 }
 
+input GetServiceInput {
+  id: ID!
+}
+
+input GetServicesByInput {
+  serviceName: String
+  pagination: PaginationInput!
+}
+
 type Mutation {
   updateUser(input: UpdateUserInput!): UpdateUserOutput!
   changePassword(input: ChangePasswordInput!): ChangePasswordOutput!
@@ -464,9 +542,13 @@ type Mutation {
   verifyForgotPassword(input: VerifyForgotPasswordInput!): VerifyForgotPasswordOutput!
   createCar(input: CreateCarInput!): CreateCarOutput!
   updateCar(input: UpdateCarInput!): UpdateCarOutput!
+  updateCarType(input: UpdateCarTypeInput!): UpdateCarTypeOutput!
   createBooking(input: CreateBookingInput!): CreateBookingOutput!
   updateBookingStatus(input: UpdateBookingStatusInput!): UpdateBookingStatusOutput!
   bookingFeedback(input: BookingFeedBackInput!): BookingFeedBackOutput!
+  createService(input: CreateServiceInput!): CreateServiceOutput!
+  updateService(input: UpdateServiceInput!): UpdateServiceOutput!
+  deleteService(input: DeleteServiceInput!): DeleteServiceOutput!
 }
 
 input UpdateUserInput {
@@ -524,6 +606,15 @@ input UpdateCarInput {
   vehicleStatus: VehicleStatusInputType
 }
 
+input UpdateCarTypeInput {
+  carType: CarTypeEnum!
+  price: Float!
+  maxDistance: Float
+  additionalDistancePrice: Float
+  procedures: ProcedureInputType!
+  acceptedPayment: [Payment!]!
+}
+
 input CreateBookingInput {
   homeDelivery: String!
   startDate: DateTime!
@@ -534,6 +625,7 @@ input CreateBookingInput {
   customerPhone: String!
   note: String
   carTypeName: CarTypeEnum!
+  serviceIds: [ID!]
 }
 
 input UpdateBookingStatusInput {
@@ -545,4 +637,23 @@ input BookingFeedBackInput {
   id: ID!
   rating: Int!
   feedback: String
+}
+
+input CreateServiceInput {
+  serviceName: String!
+  servicePrice: Float!
+  description: String!
+  perDay: Boolean!
+}
+
+input UpdateServiceInput {
+  serviceName: String
+  servicePrice: Float
+  description: String
+  perDay: Boolean
+  id: ID!
+}
+
+input DeleteServiceInput {
+  id: ID!
 }

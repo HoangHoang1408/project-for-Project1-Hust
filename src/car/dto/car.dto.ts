@@ -13,7 +13,12 @@ import {
   PaginationOutput,
 } from 'src/common/dto/output.dto';
 import { Car, CarBrand, VehicleStatus } from '../entities/car.entity';
-import { CarType, CarTypeEnum } from '../entities/carType.entity';
+import {
+  CarType,
+  CarTypeEnum,
+  Payment,
+  Procedure,
+} from '../entities/carType.entity';
 
 @InputType()
 export class CreateCarInput extends PickType(Car, [
@@ -101,4 +106,43 @@ export class GetCarTypeInput extends PickType(CarType, ['carType']) {}
 export class GetCarTypeOutput extends CoreOutput {
   @Field(() => CarType, { nullable: true })
   carType?: CarType;
+  @Field({ nullable: true })
+  numOfCars?: number;
 }
+
+@InputType()
+export class GetCarTypesInput {
+  @Field(() => PaginationInput)
+  pagination: PaginationInput;
+}
+@ObjectType()
+export class GetCarTypesOutput extends CoreOutput {
+  @Field(() => [CarType], { nullable: true })
+  carTypes?: CarType[];
+
+  @Field(() => PaginationOutput, { nullable: true })
+  pagination?: PaginationOutput;
+}
+
+@InputType()
+export class UpdateCarTypeInput {
+  @Field(() => CarTypeEnum)
+  carType: CarTypeEnum;
+
+  @Field()
+  price: number;
+
+  @Field({ nullable: true })
+  maxDistance?: number;
+
+  @Field({ nullable: true })
+  additionalDistancePrice?: number;
+
+  @Field(() => Procedure)
+  procedures: Procedure;
+
+  @Field(() => [Payment])
+  acceptedPayment: Payment[];
+}
+@ObjectType()
+export class UpdateCarTypeOutput extends CoreOutput {}

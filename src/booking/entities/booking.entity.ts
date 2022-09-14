@@ -9,6 +9,7 @@ import { IsDate, IsPhoneNumber } from 'class-validator';
 import { Car } from 'src/car/entities/car.entity';
 import { CarType, Payment } from 'src/car/entities/carType.entity';
 import { CoreEntity } from 'src/common/entities/core.entity';
+import { Service } from 'src/service/entities/service.entity';
 import { User } from 'src/user/entities/user.entity';
 import {
   Column,
@@ -71,7 +72,7 @@ export class Booking extends CoreEntity {
   feedBack: string;
 
   @Field(() => [Car])
-  @ManyToMany(() => Car)
+  @ManyToMany(() => Car, (car) => car.bookings)
   @JoinTable()
   cars: Car[];
 
@@ -102,4 +103,9 @@ export class Booking extends CoreEntity {
   @Field({ nullable: true })
   @Column({ nullable: true })
   note: string;
+
+  @Field(() => [Service], { nullable: true })
+  @ManyToMany(() => Service)
+  @JoinTable()
+  services?: Service[];
 }

@@ -13,8 +13,12 @@ import {
   GetCarsByOutput,
   GetCarTypeInput,
   GetCarTypeOutput,
+  GetCarTypesInput,
+  GetCarTypesOutput,
   UpdateCarInput,
   UpdateCarOutput,
+  UpdateCarTypeInput,
+  UpdateCarTypeOutput,
 } from './dto/car.dto';
 import { Car } from './entities/car.entity';
 import { CarType } from './entities/carType.entity';
@@ -181,13 +185,71 @@ export class CarService {
     carType: carTypeName,
   }: GetCarTypeInput): Promise<GetCarTypeOutput> {
     try {
-      const carType = await this.carTypeRepo.findOneBy({
-        carType: carTypeName,
+      const carType = await this.carTypeRepo.findOne({
+        where: {
+          carType: carTypeName,
+        },
+        relations: {
+          cars: true,
+        },
       });
       if (!carType) return createError('Loại xe', 'Không tồn tại loại xe');
       return {
         ok: true,
         carType,
+        numOfCars: carType.cars.length,
+      };
+    } catch (error) {
+      return createError('Server', 'Lỗi server, thử lại sau');
+    }
+  }
+  async getCarTypes({
+    pagination: { page, resultsPerPage },
+  }: GetCarTypesInput): Promise<GetCarTypesOutput> {
+    try {
+      const [carTypes, totalResults] = await this.carTypeRepo.findAndCount({
+        take: resultsPerPage,
+        skip: (page - 1) * resultsPerPage,
+      });
+      return {
+        ok: true,
+        carTypes,
+        pagination: {
+          totalPages: Math.ceil(totalResults / resultsPerPage),
+          totalResults,
+        },
+      };
+    } catch (error) {
+      return createError('Server', 'Lỗi server, thử lại sau');
+    }
+  }
+  async UpdateCarType(input: UpdateCarTypeInput): Promise<UpdateCarTypeOutput> {
+    try {
+      const {
+        acceptedPayment,
+        price,
+        procedures,
+        additionalDistancePrice,
+        maxDistance,
+        carType: carTypeName,
+      } = input;
+      let carType = await this.carTypeRepo.findOne({
+        where: {
+          carType: carTypeName,
+        },
+      });
+      if (!carType) return createError('Loại xe', 'Không tồn tại loại xe');
+      carType = {
+        ...carType,
+        acceptedPayment,
+        price,
+        procedures,
+        additionalDistancePrice: additionalDistancePrice || undefined,
+        maxDistance: maxDistance || undefined,
+      };
+      await this.carTypeRepo.save(carType);
+      return {
+        ok: true,
       };
     } catch (error) {
       return createError('Server', 'Lỗi server, thử lại sau');

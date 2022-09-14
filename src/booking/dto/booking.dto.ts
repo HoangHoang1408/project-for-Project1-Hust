@@ -26,6 +26,9 @@ export class CreateBookingInput extends PickType(Booking, [
 ]) {
   @Field(() => CarTypeEnum)
   carTypeName: CarTypeEnum;
+
+  @Field(() => [ID], { nullable: true })
+  serviceIds?: string[];
 }
 
 @ObjectType()

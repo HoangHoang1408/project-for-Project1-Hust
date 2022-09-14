@@ -10,8 +10,12 @@ import {
   GetCarsByOutput,
   GetCarTypeInput,
   GetCarTypeOutput,
+  GetCarTypesInput,
+  GetCarTypesOutput,
   UpdateCarInput,
   UpdateCarOutput,
+  UpdateCarTypeInput,
+  UpdateCarTypeOutput,
 } from './dto/car.dto';
 
 @Resolver()
@@ -42,5 +46,17 @@ export class CarResolver {
   @Mutation(() => UpdateCarOutput)
   updateCar(@Args('input') input: UpdateCarInput) {
     return this.carService.updateCar(input);
+  }
+
+  @Roles(['Admin'])
+  @Query(() => GetCarTypesOutput)
+  getCarTypes(@Args('input') input: GetCarTypesInput) {
+    return this.carService.getCarTypes(input);
+  }
+
+  @Roles(['Admin'])
+  @Mutation(() => UpdateCarTypeOutput)
+  updateCarType(@Args('input') input: UpdateCarTypeInput) {
+    return this.carService.UpdateCarType(input);
   }
 }
