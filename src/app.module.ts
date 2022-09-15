@@ -24,6 +24,7 @@ import { ServiceModule } from './service/service.module';
 import { UploadModule } from './upload/upload.module';
 import { User } from './user/entities/user.entity';
 import { UserModule } from './user/user.module';
+import { StreamFileModule } from './stream-file/stream-file.module';
 
 @Module({
   imports: [
@@ -120,6 +121,7 @@ import { UserModule } from './user/user.module';
     DataModule,
     BookingModule,
     ServiceModule,
+    StreamFileModule,
   ],
   controllers: [AppController],
   providers: [AppService],
