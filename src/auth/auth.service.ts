@@ -47,14 +47,14 @@ export class AuthService {
     let user: User;
     try {
       if (password != confirmPassword)
-        return createError('Repassword', 'Confirm password does not match');
+        return createError('Repassword', 'Mật khẩu xác nhận không đúng');
       const existedUser = await this.userRepo.findOne({
         where: {
           email,
         },
       });
       if (existedUser)
-        return createError('Email', 'Email was already registered');
+        return createError('Email', 'Email đã được đăng kí trước đó');
       await this.dataSource.transaction(async (etm) => {
         user = await etm.save(
           this.userRepo.create({
@@ -84,10 +84,7 @@ export class AuthService {
         ok: true,
       };
     } catch (err) {
-      return createError(
-        'Server',
-        'Server error.\n Can not sign up new user right now!',
-      );
+      return createError('Server', 'Lỗi server, thử lại sau');
     }
   }
   async login({ email, password }: LoginInput): Promise<LoginOutPut> {
@@ -98,9 +95,8 @@ export class AuthService {
         },
         select: ['password', 'id', 'role', 'email', 'name'],
       });
-      if (!user) return createError('Email', 'Wrong email address!');
-      if (!(await user.checkPassword(password)))
-        return createError('Password', 'Wrong password');
+      if (!user || !(await user.checkPassword(password)))
+        return createError('Password', 'Email hoặc mật khẩu không đúng');
       const accessToken = jwt.sign(
         {
           userId: user.id,
@@ -115,7 +111,7 @@ export class AuthService {
         accessToken,
       };
     } catch (err) {
-      return createError('Server', 'Server error.\n Can not login right now!');
+      return createError('Server', 'Lỗi server, thử lại sau');
     }
   }
   async newAccessToken({
@@ -142,8 +138,8 @@ export class AuthService {
       };
     } catch (err) {
       if (err instanceof jwt.JsonWebTokenError)
-        return createError('accessToken', 'Access token không hợp lệ');
-      return createError('Server', 'Server error.\n Can not login right now!');
+        return createError('accessToken', 'Người dùng không hợp lệ!');
+      return createError('Server', 'Lỗi server, thử lại sau');
     }
   }
   async forgotPassword({
@@ -151,7 +147,7 @@ export class AuthService {
   }: ForgotPasswordInput): Promise<ForgotPasswordOutput> {
     try {
       const user = await this.userRepo.findOneBy({ email });
-      if (!user) return createError('Email', 'Email does not exist!');
+      if (!user) return createError('Email', 'Tài khoản không tồn tại!');
       const verification = await this.verificationRepo.findOneBy({
         user: {
           id: user.id,
@@ -179,7 +175,7 @@ export class AuthService {
         ok: true,
       };
     } catch (err) {
-      return createError('Server', 'Server error.\n Can not login right now!');
+      return createError('Server', 'Lỗi server, thử lại sau');
     }
   }
 
@@ -196,10 +192,7 @@ export class AuthService {
         userId = temp.userId;
       } catch (err) {
         if (err instanceof jwt.JsonWebTokenError) {
-          return createError(
-            'Verification token',
-            'Invalid verification token!',
-          );
+          return createError('Verification token', 'Không hợp lệ!');
         }
       }
       const user = await this.userRepo.findOneBy({
@@ -212,7 +205,7 @@ export class AuthService {
         verificationType: VerificationType.EMAIL_VERIFICATION,
       });
       if (!user || !v)
-        return createError('Verification token', 'Invalid verification token!');
+        return createError('Verification token', 'Không hợp lệ!');
       await this.verificationRepo.remove(v);
       user.verified = true;
       await this.userRepo.save(user);
@@ -220,7 +213,7 @@ export class AuthService {
         ok: true,
       };
     } catch {
-      return createError('Server', 'Can not verify email');
+      return createError('Server', 'Lỗi server, thử lại sau');
     }
   }
 
@@ -240,10 +233,7 @@ export class AuthService {
         userId = temp.userId;
       } catch (err) {
         if (err instanceof jwt.JsonWebTokenError) {
-          return createError(
-            'Verification token',
-            'Invalid verification token!',
-          );
+          return createError('Verification token', 'Không hợp lệ!');
         }
       }
       const user = await this.userRepo.findOneBy({
@@ -256,10 +246,9 @@ export class AuthService {
         verificationType: VerificationType.FORGOT_PASSWORD_VERIFICATION,
       });
       if (!user || !v)
-        return createError('Verification token', 'Invalid verification token!');
-      // when input is valid
+        return createError('Verification token', 'Không hợp lệ!');
       if (password != confirmPassword)
-        return createError('Password', 'Password does not match');
+        return createError('Password', 'Mật khẩu xác nhận không đúng');
       await this.verificationRepo.remove(v);
       user.password = password;
       await this.userRepo.save(user);
@@ -267,7 +256,7 @@ export class AuthService {
         ok: true,
       };
     } catch {
-      return createError('Server', 'Can not verify email');
+      return createError('Server', 'Lỗi server, thử lại sau');
     }
   }
 }

@@ -21,10 +21,10 @@ import { EmailModule } from './email/email.module';
 import { FirebaseModule } from './firebase/firebase.module';
 import { Service } from './service/entities/service.entity';
 import { ServiceModule } from './service/service.module';
+import { StreamFileModule } from './stream-file/stream-file.module';
 import { UploadModule } from './upload/upload.module';
 import { User } from './user/entities/user.entity';
 import { UserModule } from './user/user.module';
-import { StreamFileModule } from './stream-file/stream-file.module';
 
 @Module({
   imports: [
@@ -37,6 +37,7 @@ import { StreamFileModule } from './stream-file/stream-file.module';
       ignoreEnvFile: process.env.NODE_ENV === 'production',
       validationSchema: Joi.object({
         NODE_ENV: Joi.string().required(),
+        COMPANY_NAME: Joi.string().required(),
         DATABASE_HOST: Joi.string().required(),
         DATABASE_PORT: Joi.string().required(),
         DATABASE_USERNAME: Joi.string().required(),

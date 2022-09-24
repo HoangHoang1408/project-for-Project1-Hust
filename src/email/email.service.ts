@@ -46,10 +46,11 @@ export class EmailService {
   }
 
   sendConfirmEmail(to: string, confirmEmailCode: string) {
-    const confirmLink = `${this.clientDomain}/confirm-email/${confirmEmailCode}`;
+    const confirmLink = `${this.clientDomain}/auth/confirmEmail?token=${confirmEmailCode}`;
     const html = this.transformTemplate(EmailConfirmTemplate, {
       CLIENT_LINK: this.clientDomain,
       CONFIRM_LINK: confirmLink,
+      COMPANY_NAME: process.env.COMPANY_NAME,
     });
     const text = `Please confirm your email to access our further service.\nIf you didn't create an account from us, you can safely delete this email.\nConfirm link: ${confirmLink}`;
     const subject = 'Confirm Email';
@@ -61,6 +62,7 @@ export class EmailService {
     const html = this.transformTemplate(ForgotPasswordTemplate, {
       CLIENT_LINK: this.clientDomain,
       FORGOT_PASSWORD_LINK: forgotPasswordLink,
+      COMPANY_NAME: process.env.COMPANY_NAME,
     });
     const text = `Follow the link and instruction to reset your password.\nIf you didn't perform this action, you can safely delete this email.\nConfirm link: ${forgotPasswordLink}`;
     const subject = 'Reset Password';

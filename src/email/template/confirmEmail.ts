@@ -236,7 +236,7 @@ export const EmailConfirmTemplate = `
                 <p style="margin: 0">
                   Tap the button below to confirm your email address. If you
                   didn't create an account with
-                  <a href="{{CLIENT_LINK}}">Company Name</a>, you can safely
+                  <a href="{{CLIENT_LINK}}">{{COMPANY_NAME}}</a>, you can safely
                   delete this email.
                 </p>
               </td>

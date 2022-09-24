@@ -51,7 +51,7 @@ export class FirebaseService {
       };
     } catch (error) {
       throw new ServiceUnavailableException(
-        'Can not upload file. Please try again later',
+        'Không thể tải ảnh lên, thử lại sau',
       );
     }
   }
@@ -68,7 +68,7 @@ export class FirebaseService {
       };
     } catch {
       throw new ServiceUnavailableException(
-        'Can not upload file. Please try again later',
+        'Không thể tải ảnh lên, thử lại sau',
       );
     }
   }
@@ -77,14 +77,14 @@ export class FirebaseService {
       const storageRef = ref(this.storage, storagePathName);
       await deleteObject(storageRef);
     } catch {
-      throw new ServiceUnavailableException('Không thể xoá file thử lại sau');
+      throw new ServiceUnavailableException('Không thể xoá file, thử lại sau');
     }
   }
   async deleteFiles(storagePaths: string[]) {
     try {
       await Promise.all(storagePaths.map((p) => this.deleteFile(p)));
     } catch (err) {
-      throw new ServiceUnavailableException('Không thể xoá file thử lại sau');
+      throw new ServiceUnavailableException('Không thể xoá file, thử lại sau');
     }
   }
 }
