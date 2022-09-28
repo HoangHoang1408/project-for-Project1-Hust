@@ -7,7 +7,12 @@ import {
   ChangePasswordInput,
   ChangePasswordOutput,
 } from './dto/changePassword.dto';
-import { GetUserByInput, GetUserByOutput } from './dto/getUser.dto';
+import {
+  GetUserByInput,
+  GetUserByOutput,
+  GetUserDetailInput,
+  GetUserDetailOutput,
+} from './dto/getUser.dto';
 import { User } from './entities/user.entity';
 
 @Injectable()
@@ -15,6 +20,20 @@ export class UserService {
   constructor(
     @InjectRepository(User) private readonly userRepo: Repository<User>,
   ) {}
+  async getUserDetail(input: GetUserDetailInput): Promise<GetUserDetailOutput> {
+    try {
+      const user = await this.userRepo.findOneBy({
+        id: input.useId,
+      });
+      if (!user) return createError('ID', 'Người dùng không tồn tại');
+      return {
+        ok: true,
+        user,
+      };
+    } catch (error) {
+      return createError('Server', 'Lỗi server, thử lại sau');
+    }
+  }
 
   async updateUser(
     currentUser: User,

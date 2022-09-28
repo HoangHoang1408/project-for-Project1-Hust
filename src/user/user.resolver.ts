@@ -8,7 +8,12 @@ import {
   UpdateUserInput,
   UpdateUserOutput,
 } from './dto';
-import { GetUserByInput, GetUserByOutput } from './dto/getUser.dto';
+import {
+  GetUserByInput,
+  GetUserByOutput,
+  GetUserDetailInput,
+  GetUserDetailOutput,
+} from './dto/getUser.dto';
 import { User } from './entities/user.entity';
 import { UserService } from './user.service';
 
@@ -24,6 +29,7 @@ export class UserResolver {
       user,
     };
   }
+  
   @Roles(['Any'])
   @Mutation(() => UpdateUserOutput)
   updateUser(
@@ -46,5 +52,11 @@ export class UserResolver {
   @Query(() => GetUserByOutput)
   getUserBy(@Args('input') input: GetUserByInput) {
     return this.userService.getUserBy(input);
+  }
+
+  @Roles(['Admin'])
+  @Query(() => GetUserDetailOutput)
+  getUserDetail(@Args('input') input: GetUserDetailInput) {
+    return this.userService.getUserDetail(input);
   }
 }

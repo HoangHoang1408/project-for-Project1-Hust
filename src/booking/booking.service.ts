@@ -74,9 +74,12 @@ export class BookingService {
         )
           continue;
         booking.cars.forEach((c) => bookedIds.add(c.id));
-        if (bookedIds.size + +quantity > totalCar) return false;
       }
-      return true;
+      return (
+        cars.filter(
+          (c) => !bookedIds.has(c.id) && c.vehicleStatus.goodCondition,
+        ).length >= +quantity
+      );
     } catch (error) {
       return false;
     }
@@ -171,10 +174,12 @@ export class BookingService {
         )
           continue;
         booking.cars.forEach((c) => bookedIds.add(c.id));
-        if (bookedIds.size + +quantity > totalCar)
-          return createError('Số lượng xe', 'Hiện không còn đủ xe để đặt');
       }
-      const availableCars = cars.filter((c) => !bookedIds.has(c.id));
+      const availableCars = cars.filter(
+        (c) => !bookedIds.has(c.id) && c.vehicleStatus.goodCondition,
+      );
+      if (availableCars.length < +quantity)
+        return createError('Số lượng xe', 'Hiện không còn đủ xe để đặt');
       let services: Service[] = [];
       if (serviceIds && serviceIds.length > 0)
         try {
@@ -220,7 +225,6 @@ export class BookingService {
         bookingCode,
       };
     } catch (error) {
-      console.log(error);
       return createError('Server', 'Server error, please try again later');
     }
   }

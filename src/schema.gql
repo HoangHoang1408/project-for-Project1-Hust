@@ -351,6 +351,12 @@ type GetUserByOutput {
   pagination: PaginationOutput
 }
 
+type GetUserDetailOutput {
+  ok: Boolean!
+  error: CustomError
+  user: User
+}
+
 input StoredFileInputType {
   fileUrl: String!
   filePath: String!
@@ -436,6 +442,7 @@ input VehicleStatusInputType {
 type Query {
   getDetailUser: GetDetailUserOutput!
   getUserBy(input: GetUserByInput!): GetUserByOutput!
+  getUserDetail(input: GetUserDetailInput!): GetUserDetailOutput!
   login(input: LoginInput!): LoginOutPut!
   newAccessToken(input: NewAccessTokenInput!): NewAccessTokenOutput!
   verifyEmail(input: VerifyEmailInput!): VerifyEmailOutput!
@@ -462,6 +469,10 @@ input GetUserByInput {
 input PaginationInput {
   page: Int = 1
   resultsPerPage: Int = 10
+}
+
+input GetUserDetailInput {
+  useId: ID!
 }
 
 input LoginInput {

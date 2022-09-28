@@ -1,4 +1,4 @@
-import { Field, InputType, ObjectType } from '@nestjs/graphql';
+import { Field, ID, InputType, ObjectType } from '@nestjs/graphql';
 import {
   CoreOutput,
   PaginationInput,
@@ -28,4 +28,16 @@ export class GetUserByOutput extends CoreOutput {
 
   @Field(() => PaginationOutput, { nullable: true })
   pagination?: PaginationOutput;
+}
+
+@InputType()
+export class GetUserDetailInput {
+  @Field(() => ID)
+  useId: number;
+}
+
+@ObjectType()
+export class GetUserDetailOutput extends CoreOutput {
+  @Field(() => User, { nullable: true })
+  user?: User;
 }
