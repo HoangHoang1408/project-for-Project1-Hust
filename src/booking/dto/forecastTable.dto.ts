@@ -41,4 +41,7 @@ export class ForecastTableInput {
 export class ForecastTableOutput extends CoreOutput {
   @Field(() => [TableRowData], { nullable: true })
   tableData?: TableRowData[];
+
+  @Field(() => [String], { nullable: true })
+  columnSummary?: string[];
 }

@@ -255,6 +255,7 @@ type ForecastTableOutput {
   ok: Boolean!
   error: CustomError
   tableData: [TableRowData!]
+  columnSummary: [String!]
 }
 
 type CreateCarOutput {

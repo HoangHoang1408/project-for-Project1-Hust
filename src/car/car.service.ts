@@ -210,6 +210,9 @@ export class CarService {
       const [carTypes, totalResults] = await this.carTypeRepo.findAndCount({
         take: resultsPerPage,
         skip: (page - 1) * resultsPerPage,
+        order: {
+          carType: 'ASC',
+        },
       });
       return {
         ok: true,

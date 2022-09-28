@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { randomBytes } from 'crypto';
-import { sampleSize } from 'lodash';
+import { range, sampleSize } from 'lodash';
 import { Car } from 'src/car/entities/car.entity';
 import { CarType } from 'src/car/entities/carType.entity';
 import { createError } from 'src/common/utils';
@@ -337,6 +337,9 @@ export class BookingService {
           bookingCode: bookingCode ? ILike(`%${bookingCode}%`) : undefined,
           status: bookingStatus || undefined,
         },
+        order: {
+          createdAt: 'DESC',
+        },
       };
       if (currentUser.role === UserRole.Normal) {
         findOption.where['user'] = {
@@ -448,16 +451,21 @@ export class BookingService {
             .forEach((dd) => (dd.status = booking.status));
         });
       });
+      const columnData = range(tableData[0].dayDatas.length).map((_) => 0);
       tableData.forEach((r) => {
         let count = 0;
-        r.dayDatas.forEach((d) => {
-          if (d.status) count += 1;
+        r.dayDatas.forEach((d, i) => {
+          if (d.status) {
+            count += 1;
+            columnData[i] += 1;
+          }
         });
         r.rowSumary = `${count}/${r.dayDatas.length}`;
       });
       return {
         ok: true,
         tableData,
+        columnSummary: columnData.map((d) => `${d}/${cars.length}`),
       };
     } catch (error) {
       return createError('Server', 'Lỗi server, thử lại sau');
